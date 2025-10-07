@@ -1,11 +1,18 @@
 import { Button } from "@/components/ui/button";
-import { ArrowRight, Play } from "lucide-react";
+import { ArrowRight, Play, Leaf } from "lucide-react";
 import heroImage from "@assets/generated_images/Students_learning_hero_image_af5a6f00.png";
 
 export default function HeroSection() {
   return (
-    <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-chart-2/5">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32">
+    <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/10">
+      <div className="absolute top-20 right-20 opacity-10">
+        <Leaf className="h-64 w-64 text-secondary rotate-12" />
+      </div>
+      <div className="absolute bottom-20 left-10 opacity-10">
+        <Leaf className="h-48 w-48 text-primary -rotate-45" />
+      </div>
+      
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 md:py-32 relative">
         <div className="grid md:grid-cols-2 gap-12 items-center">
           <div className="space-y-8">
             <div className="space-y-4">

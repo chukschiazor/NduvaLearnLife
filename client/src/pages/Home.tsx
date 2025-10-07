@@ -1,14 +1,30 @@
+import RoleSelection from "@/components/RoleSelection";
+import OnboardingForm from "@/components/OnboardingForm";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CourseCard from "@/components/CourseCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
+import { useState } from "react";
 import budgetingImg from "@assets/generated_images/Budgeting_module_thumbnail_a94e4967.png";
 import creativityImg from "@assets/generated_images/Creativity_module_thumbnail_fe82ef99.png";
 import problemSolvingImg from "@assets/generated_images/Problem-solving_module_thumbnail_08a22595.png";
 import investingImg from "@assets/generated_images/Investing_module_thumbnail_ebfef553.png";
 
 export default function Home() {
+  const [step, setStep] = useState<"role" | "onboarding" | "home">("role");
+  const [userRole, setUserRole] = useState<"learner" | "teacher" | null>(null);
+
+  if (step === "role") {
+    return <RoleSelection onSelectRole={(role) => {
+      setUserRole(role);
+      setStep("onboarding");
+    }} />;
+  }
+
+  if (step === "onboarding" && userRole === "learner") {
+    return <OnboardingForm onComplete={() => setStep("home")} />;
+  }
   const featuredCourses = [
     {
       id: "1",
@@ -80,8 +96,16 @@ export default function Home() {
         </div>
       </section>
 
-      <section className="bg-gradient-to-br from-primary/5 to-chart-2/5 py-20">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <section className="bg-gradient-to-br from-primary/10 to-secondary/10 py-20 relative overflow-hidden">
+        <div className="absolute inset-0 opacity-5">
+          <div className="absolute top-10 left-20">
+            <div className="w-32 h-32 rounded-full bg-primary" />
+          </div>
+          <div className="absolute bottom-20 right-32">
+            <div className="w-24 h-24 rounded-full bg-secondary" />
+          </div>
+        </div>
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
           <div className="max-w-3xl mx-auto text-center space-y-6">
             <h2 className="font-display font-bold text-3xl md:text-4xl">
               Ready to Transform Your Future?
@@ -89,7 +113,7 @@ export default function Home() {
             <p className="text-lg text-muted-foreground">
               Join thousands of students mastering life skills that matter. Start learning today and unlock your potential.
             </p>
-            <Button size="lg" className="gap-2" data-testid="button-start-learning">
+            <Button size="lg" className="gap-2" data-testid="button-start-learning" onClick={() => setStep("role")}>
               Start Learning Now
               <ArrowRight className="h-5 w-5" />
             </Button>

@@ -2,6 +2,7 @@ import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { BookOpen, Trophy, MessageSquare, User, Menu, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import Logo from "./Logo";
 import { useState } from "react";
 
 export default function Navbar() {
@@ -20,11 +21,8 @@ export default function Navbar() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex items-center justify-between h-16">
           <Link href="/" data-testid="link-home">
-            <div className="flex items-center gap-2 cursor-pointer">
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">N</span>
-              </div>
-              <span className="font-display font-bold text-xl">NDUVA</span>
+            <div className="cursor-pointer">
+              <Logo size="md" />
             </div>
           </Link>
 
@@ -81,8 +79,6 @@ export default function Navbar() {
           </div>
         )}
       </div>
-
-      <div className="h-1 bg-gradient-to-r from-primary via-chart-2 to-chart-3" />
     </nav>
   );
 }
