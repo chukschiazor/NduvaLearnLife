@@ -77,19 +77,26 @@ Preferred communication style: Simple, everyday language.
 
 ### Authentication & Authorization
 
-**Implementation (✓ Complete):**
+**Implementation (✓ Complete & Tested):**
 - Replit OAuth integration (Google, GitHub, X, Apple, email/password)
 - Session-based authentication with PostgreSQL session store (connect-pg-simple)
 - 7-day session TTL with automatic token refresh
 - Protected API routes using isAuthenticated middleware
 - Role-based onboarding flow (learner vs. teacher selection)
+- **Status**: Fully functional and end-to-end tested (October 12, 2025)
 
-**Auth Flow:**
+**Auth Flow (✓ Verified):**
 1. Landing page with "Start Learning" CTA for unauthenticated users
 2. OAuth login via /api/login → Replit OIDC flow
 3. Callback to /api/callback creates user session and upserts user
 4. First-time users complete onboarding (role selection + date of birth)
 5. Authenticated users access full app with role-based features
+6. Dashboard displays navigation (My Courses, Leaderboard, Forum, Profile)
+
+**Known Behavior:**
+- OAuth errors in logs are expected when users cancel login or have transient network issues
+- The `/api/callback` route has `failureRedirect: "/api/login"` which gracefully handles failed login attempts
+- Successful logins complete without issues, as confirmed by e2e testing
 
 **User Schema (Merged Replit Auth + Platform Fields):**
 - OAuth fields: id (sub), email, firstName, lastName, profileImageUrl
