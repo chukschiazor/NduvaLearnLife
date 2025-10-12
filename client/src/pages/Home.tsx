@@ -1,30 +1,14 @@
-import RoleSelection from "@/components/RoleSelection";
-import OnboardingForm from "@/components/OnboardingForm";
 import Navbar from "@/components/Navbar";
 import HeroSection from "@/components/HeroSection";
 import CourseCard from "@/components/CourseCard";
 import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { useState } from "react";
 import budgetingImg from "@assets/generated_images/Budgeting_module_thumbnail_a94e4967.png";
 import creativityImg from "@assets/generated_images/Creativity_module_thumbnail_fe82ef99.png";
 import problemSolvingImg from "@assets/generated_images/Problem-solving_module_thumbnail_08a22595.png";
 import investingImg from "@assets/generated_images/Investing_module_thumbnail_ebfef553.png";
 
 export default function Home() {
-  const [step, setStep] = useState<"role" | "onboarding" | "home">("role");
-  const [userRole, setUserRole] = useState<"learner" | "teacher" | null>(null);
-
-  if (step === "role") {
-    return <RoleSelection onSelectRole={(role) => {
-      setUserRole(role);
-      setStep("onboarding");
-    }} />;
-  }
-
-  if (step === "onboarding" && userRole === "learner") {
-    return <OnboardingForm onComplete={() => setStep("home")} />;
-  }
   const featuredCourses = [
     {
       id: "1",
@@ -113,7 +97,7 @@ export default function Home() {
             <p className="text-lg text-muted-foreground">
               Join thousands of students mastering life skills that matter. Start learning today and unlock your potential.
             </p>
-            <Button size="lg" className="gap-2" data-testid="button-start-learning" onClick={() => setStep("role")}>
+            <Button size="lg" className="gap-2" data-testid="button-start-learning">
               Start Learning Now
               <ArrowRight className="h-5 w-5" />
             </Button>

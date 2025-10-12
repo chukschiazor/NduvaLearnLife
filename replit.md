@@ -52,11 +52,13 @@ Preferred communication style: Simple, everyday language.
 - API routes prefixed with `/api` for clear separation from static assets
 - Middleware for request logging and error handling
 
-**Current State:**
-- Basic user schema defined (id, username, password)
-- Storage interface designed for CRUD operations
-- Server-side rendering setup for production builds
-- Development mode with HMR (Hot Module Replacement) via Vite
+**Current State (Phase 1 MVP - Foundation Complete):**
+- **Database**: Complete schema with 15+ tables deployed to PostgreSQL
+- **Authentication**: Replit OAuth fully integrated with session management
+- **Storage Layer**: DatabaseStorage implementation with CRUD operations for all entities
+- **API Routes**: RESTful endpoints for auth, courses, enrollments, gamification, and community
+- **Frontend Auth**: useAuth hook, landing page, and onboarding flow
+- **Development**: HMR via Vite, TypeScript type safety throughout
 
 ### Data Architecture
 
@@ -75,17 +77,31 @@ Preferred communication style: Simple, everyday language.
 
 ### Authentication & Authorization
 
-**Design:**
-- OAuth and email/password authentication
-- Parental consent workflow for users under 13 (COPPA compliance)
-- Role-based access (learner vs. teacher)
-- Session management using connect-pg-simple (PostgreSQL session store)
+**Implementation (✓ Complete):**
+- Replit OAuth integration (Google, GitHub, X, Apple, email/password)
+- Session-based authentication with PostgreSQL session store (connect-pg-simple)
+- 7-day session TTL with automatic token refresh
+- Protected API routes using isAuthenticated middleware
+- Role-based onboarding flow (learner vs. teacher selection)
 
-**Privacy & Compliance:**
+**Auth Flow:**
+1. Landing page with "Start Learning" CTA for unauthenticated users
+2. OAuth login via /api/login → Replit OIDC flow
+3. Callback to /api/callback creates user session and upserts user
+4. First-time users complete onboarding (role selection + date of birth)
+5. Authenticated users access full app with role-based features
+
+**User Schema (Merged Replit Auth + Platform Fields):**
+- OAuth fields: id (sub), email, firstName, lastName, profileImageUrl
+- Platform fields: role, dateOfBirth, xpPoints, currentStreak, fullName
+- Computed fullName from firstName + lastName for display
+
+**Privacy & Compliance (Planned):**
+- Parental consent workflow for users under 13 (COPPA)
 - Privacy by design approach
-- COPPA and GDPR compliance requirements
-- Data retention policies planned
-- Moderated community with automated filters and escalation
+- GDPR compliance requirements  
+- Data retention policies
+- Moderated community with automated filters
 
 ### AI & Content Pipeline
 
