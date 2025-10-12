@@ -1228,4 +1228,860 @@ X-RateLimit-Reset: 1704672000
 
 ---
 
-*Next: Adaptive Engine Design*
+## 4. Adaptive Learning Engine
+
+### Overview
+
+The adaptive engine personalizes learning paths based on real-time performance signals, learning pace, and mastery indicators.
+
+### Architecture
+
+```
+┌─────────────────┐
+│  Signal         │
+│  Collection     │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐      ┌──────────────┐
+│  Mastery        │◄─────┤  Historical  │
+│  Calculation    │      │  Performance │
+└────────┬────────┘      └──────────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Policy         │
+│  Engine         │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Recommendation │
+│  Generator      │
+└────────┬────────┘
+         │
+         ▼
+┌─────────────────┐
+│  Next Lesson(s) │
+└─────────────────┘
+```
+
+### Signal Collection
+
+#### Primary Signals
+```json
+{
+  "quiz_performance": {
+    "score": 0.85,
+    "time_taken_ratio": 0.7,
+    "attempts_count": 1,
+    "question_level_accuracy": {
+      "easy": 1.0,
+      "medium": 0.8,
+      "hard": 0.6
+    }
+  },
+  "video_engagement": {
+    "completion_rate": 0.95,
+    "rewatch_count": 2,
+    "pause_points": [45, 120],
+    "playback_speed": 1.0
+  },
+  "time_metrics": {
+    "lesson_start_time": "2024-01-15T14:00:00Z",
+    "lesson_end_time": "2024-01-15T14:25:00Z",
+    "idle_time_seconds": 120
+  },
+  "historical_patterns": {
+    "avg_quiz_score_last_5": 0.82,
+    "preferred_learning_time": "afternoon",
+    "avg_session_duration_minutes": 30,
+    "topic_affinity": {"budgeting": 0.9, "investing": 0.7}
+  }
+}
+```
+
+#### Derived Metrics
+- **Mastery Score** (0-100): Weighted combination of quiz scores, attempts, and engagement
+- **Learning Velocity**: Lessons completed per week
+- **Struggle Indicators**: Multiple attempts, low completion rates, frequent pauses
+- **Engagement Index**: Watch time, interaction rate, return frequency
+
+### Mastery Calculation
+
+#### Formula
+```python
+def calculate_mastery(signals):
+    weights = {
+        'quiz_score': 0.4,
+        'quiz_attempts': 0.15,  # Inverse weight
+        'video_completion': 0.2,
+        'time_efficiency': 0.15,
+        'prior_knowledge': 0.1
+    }
+    
+    quiz_component = signals.quiz_score * weights['quiz_score']
+    attempts_component = (1 / signals.attempts_count) * weights['quiz_attempts']
+    video_component = signals.completion_rate * weights['video_completion']
+    time_component = min(1.0, signals.expected_time / signals.actual_time) * weights['time_efficiency']
+    prior_component = signals.topic_affinity * weights['prior_knowledge']
+    
+    mastery = (quiz_component + attempts_component + video_component + 
+               time_component + prior_component)
+    
+    return round(mastery * 100, 2)
+```
+
+#### Mastery Levels
+| Score | Level | Interpretation |
+|-------|-------|----------------|
+| 90-100 | Mastered | Ready for advanced topics |
+| 75-89 | Proficient | Can proceed, may need review |
+| 60-74 | Developing | Needs practice before advancing |
+| 0-59 | Beginning | Requires additional support |
+
+### Policy Engine
+
+#### Recommendation Policies
+
+1. **Sequential Progression** (Default)
+   - Condition: Mastery ≥ 75%
+   - Action: Recommend next lesson in sequence
+   
+2. **Reinforcement**
+   - Condition: Mastery < 75% or Failed quiz
+   - Action: Recommend review lessons or alternative explanations
+   
+3. **Challenge Mode**
+   - Condition: Mastery ≥ 90% consistently
+   - Action: Skip optional lessons, recommend advanced content
+   
+4. **Remediation**
+   - Condition: 3+ failed attempts or Mastery < 60%
+   - Action: Recommend prerequisite lessons or simpler content
+
+5. **Topic Affinity**
+   - Condition: High engagement in specific topic
+   - Action: Recommend related courses/lessons
+
+#### Policy Decision Tree
+```
+Start
+  │
+  ├─ Mastery ≥ 90%?
+  │    ├─ Yes → Challenge Mode (skip/advanced)
+  │    └─ No ↓
+  │
+  ├─ Mastery ≥ 75%?
+  │    ├─ Yes → Sequential Progression
+  │    └─ No ↓
+  │
+  ├─ Mastery ≥ 60%?
+  │    ├─ Yes → Reinforcement (practice)
+  │    └─ No ↓
+  │
+  └─ Mastery < 60%
+       └─ Remediation (prerequisite)
+```
+
+### Recommendation Algorithm
+
+#### Hybrid Approach: Rule-based + Collaborative Filtering
+
+```python
+def generate_recommendations(user_id, enrollment_id, count=5):
+    # 1. Get current state
+    mastery = calculate_mastery(user_id, enrollment_id)
+    learning_pace = get_learning_pace(user_id)
+    
+    # 2. Apply policy
+    policy = determine_policy(mastery)
+    
+    # 3. Get candidate lessons
+    if policy == 'sequential':
+        candidates = get_next_in_sequence(enrollment_id)
+    elif policy == 'reinforcement':
+        candidates = get_review_lessons(enrollment_id)
+    elif policy == 'challenge':
+        candidates = get_advanced_lessons(enrollment_id)
+    elif policy == 'remediation':
+        candidates = get_prerequisite_lessons(enrollment_id)
+    
+    # 4. Apply collaborative filtering
+    similar_users = find_similar_learners(user_id)
+    cf_scores = calculate_cf_scores(candidates, similar_users)
+    
+    # 5. Rank and return
+    ranked = rank_by_combined_score(
+        candidates,
+        policy_weight=0.7,
+        cf_weight=0.3
+    )
+    
+    return ranked[:count]
+```
+
+#### Similarity Metrics (Collaborative Filtering)
+```python
+def find_similar_learners(user_id):
+    features = [
+        'age_group',
+        'avg_quiz_score',
+        'learning_pace',
+        'topic_preferences',
+        'engagement_patterns'
+    ]
+    
+    # Cosine similarity on feature vectors
+    user_vector = get_user_vector(user_id, features)
+    all_users = get_all_learners()
+    
+    similarities = []
+    for other_user in all_users:
+        if other_user.id == user_id:
+            continue
+        other_vector = get_user_vector(other_user.id, features)
+        sim = cosine_similarity(user_vector, other_vector)
+        similarities.append((other_user.id, sim))
+    
+    return sorted(similarities, key=lambda x: x[1], reverse=True)[:50]
+```
+
+### Fallback & Edge Cases
+
+#### When Insufficient Data
+- **New users**: Default to sequential progression
+- **No similar users**: Use content-based filtering (lesson metadata)
+- **API timeout**: Return cached recommendations
+
+#### Performance Optimization
+- **Pre-computation**: Calculate recommendations daily for active users
+- **Caching**: Redis cache with 1-hour TTL
+- **Batch processing**: Update mastery scores asynchronously
+
+### Evaluation Metrics
+
+Track recommendation quality:
+- **Click-through Rate (CTR)**: % of recommended lessons started
+- **Completion Rate**: % of recommended lessons finished
+- **Learning Outcomes**: Avg quiz score on recommended content
+- **Time-to-Mastery**: Days to reach 90% mastery
+
+#### A/B Testing Framework
+```json
+{
+  "experiment_id": "adaptive_v2_vs_v1",
+  "variants": [
+    {
+      "name": "control",
+      "algorithm": "sequential_only",
+      "traffic_percentage": 50
+    },
+    {
+      "name": "treatment",
+      "algorithm": "hybrid_adaptive",
+      "traffic_percentage": 50
+    }
+  ],
+  "metrics": ["ctr", "completion_rate", "quiz_score", "engagement_time"],
+  "duration_days": 30
+}
+```
+
+---
+
+## 5. Content Pipeline (AI-Assisted)
+
+### Pipeline Stages
+
+```
+Teacher Input
+    ↓
+[1] Prompt Engineering → LLM
+    ↓
+[2] Script Generation
+    ↓
+[3] Storyboard Creation
+    ↓
+[4] Scene Rendering (Vyond-style)
+    ↓
+[5] Voice Synthesis (TTS)
+    ↓
+[6] Caption Generation
+    ↓
+[7] Video Compositing
+    ↓
+[8] Quality Check & Moderation
+    ↓
+Published Lesson
+```
+
+### Stage 1: Prompt Engineering
+
+#### Input from Teacher
+```json
+{
+  "topic": "Introduction to Compound Interest",
+  "age_group": "14-17",
+  "duration_minutes": 8,
+  "learning_objectives": [
+    "Define compound interest",
+    "Understand the difference from simple interest",
+    "Calculate compound interest using formula"
+  ],
+  "tone": "friendly, encouraging",
+  "complexity": "beginner"
+}
+```
+
+#### LLM Prompt Template
+```
+You are an expert educational content creator for ages {age_group}.
+Create a {duration_minutes}-minute lesson script on "{topic}".
+
+Learning Objectives:
+{objectives_list}
+
+Requirements:
+- Tone: {tone}
+- Use age-appropriate language
+- Include 2-3 real-world examples
+- Add interactive moments (questions, think-pauses)
+- Structure: Hook → Explanation → Examples → Summary
+- Include visual cues for animation
+
+Output Format:
+{
+  "hook": "Opening 30 seconds to grab attention",
+  "main_content": [
+    {
+      "segment_title": "...",
+      "narration": "...",
+      "visual_cue": "...",
+      "duration_seconds": 60
+    }
+  ],
+  "examples": [...],
+  "summary": "..."
+}
+```
+
+### Stage 2: Script Generation
+
+#### LLM Output (GPT-4 / Claude)
+```json
+{
+  "script_id": "uuid",
+  "hook": {
+    "narration": "Imagine earning money while you sleep...",
+    "visual_cue": "Animation of money growing on a tree",
+    "duration_seconds": 30
+  },
+  "segments": [
+    {
+      "title": "What is Compound Interest?",
+      "narration": "Compound interest is like a snowball rolling down a hill...",
+      "visual_cue": "Snowball growing animation",
+      "duration_seconds": 90,
+      "interaction": {
+        "type": "pause_and_think",
+        "question": "Can you think of where you've seen compound interest?"
+      }
+    }
+  ],
+  "summary": {
+    "narration": "Remember: compound interest helps your money grow faster...",
+    "visual_cue": "Key points appearing on screen",
+    "duration_seconds": 45
+  },
+  "total_duration": 480
+}
+```
+
+### Stage 3: Storyboard Creation
+
+#### Scene Composition
+```json
+{
+  "scene_id": "scene_001",
+  "timestamp": "00:00:30",
+  "duration": 15,
+  "background": {
+    "type": "classroom",
+    "color_palette": "warm"
+  },
+  "characters": [
+    {
+      "id": "teacher_avatar",
+      "position": "center",
+      "expression": "friendly",
+      "animation": "pointing_to_board"
+    }
+  ],
+  "props": [
+    {
+      "type": "whiteboard",
+      "content": "A = P(1 + r/n)^(nt)",
+      "position": "background_center"
+    }
+  ],
+  "transitions": {
+    "in": "fade",
+    "out": "slide_left"
+  }
+}
+```
+
+### Stage 4: Video Rendering (Vyond-style)
+
+#### Asset Library
+- **Characters**: 20+ diverse avatars (age, ethnicity, style)
+- **Backgrounds**: 50+ scenes (classroom, home, office, outdoor)
+- **Props**: 200+ objects (charts, devices, everyday items)
+- **Animations**: 100+ actions (talking, walking, gesturing)
+
+#### Rendering Engine
+```python
+class VideoRenderer:
+    def render_scene(self, scene_data):
+        # 1. Load assets
+        background = load_background(scene_data.background)
+        characters = [load_character(c) for c in scene_data.characters]
+        props = [load_prop(p) for p in scene_data.props]
+        
+        # 2. Compose scene
+        frame = composite_layers(background, characters, props)
+        
+        # 3. Apply animations
+        animated_frame = apply_animations(frame, scene_data.animations)
+        
+        # 4. Render at 30fps
+        video_clip = render_video(
+            animated_frame,
+            duration=scene_data.duration,
+            fps=30,
+            resolution='1080p'
+        )
+        
+        return video_clip
+    
+    def render_lesson(self, storyboard):
+        clips = [self.render_scene(scene) for scene in storyboard.scenes]
+        final_video = concatenate_clips(clips)
+        return final_video
+```
+
+### Stage 5: Voice Synthesis (TTS)
+
+#### Voice Profiles
+| Voice ID | Description | Use Case |
+|----------|-------------|----------|
+| `friendly_female` | Warm, encouraging | General lessons (ages 10-17) |
+| `professional_male` | Clear, authoritative | Advanced topics (ages 18-21) |
+| `energetic_young` | Upbeat, playful | Interactive segments |
+| `calm_narrator` | Soothing, measured | Complex explanations |
+
+#### TTS Generation
+```python
+def generate_voiceover(script, voice_id='friendly_female'):
+    segments = []
+    
+    for segment in script.segments:
+        audio = tts_engine.synthesize(
+            text=segment.narration,
+            voice=voice_id,
+            speed=0.95,  # Slightly slower for clarity
+            emphasis_words=segment.key_terms
+        )
+        
+        # Add pauses for interaction points
+        if segment.interaction:
+            audio = add_pause(audio, duration=3)
+        
+        segments.append(audio)
+    
+    return concatenate_audio(segments)
+```
+
+### Stage 6: Caption Generation
+
+#### Auto-caption with Timestamps
+```json
+{
+  "captions": [
+    {
+      "start_time": "00:00:00",
+      "end_time": "00:00:04",
+      "text": "Imagine earning money while you sleep."
+    },
+    {
+      "start_time": "00:00:04",
+      "end_time": "00:00:08",
+      "text": "That's the power of compound interest!"
+    }
+  ],
+  "language": "en",
+  "format": "WebVTT"
+}
+```
+
+### Stage 7: Video Compositing
+
+```python
+def composite_final_video(video_clip, audio, captions):
+    # 1. Sync audio with video
+    final = video_clip.set_audio(audio)
+    
+    # 2. Add captions
+    final = add_subtitles(final, captions, style={
+        'font': 'Arial',
+        'size': 24,
+        'color': 'white',
+        'background': 'rgba(0,0,0,0.7)',
+        'position': 'bottom'
+    })
+    
+    # 3. Add branding
+    final = add_logo_watermark(final, position='top_right', opacity=0.3)
+    
+    # 4. Export
+    final.write_videofile(
+        'output.mp4',
+        codec='h264',
+        audio_codec='aac',
+        bitrate='5000k'
+    )
+    
+    return 'output.mp4'
+```
+
+### Stage 8: Quality Check & Moderation
+
+#### Automated Checks
+```python
+def quality_assurance(video_path, script):
+    checks = {
+        'duration_match': check_duration(video_path, script.total_duration),
+        'audio_quality': check_audio_levels(video_path),
+        'caption_sync': verify_caption_timing(video_path),
+        'content_safety': scan_for_inappropriate_content(video_path),
+        'accessibility': check_wcag_compliance(video_path)
+    }
+    
+    if all(checks.values()):
+        return {"status": "approved", "checks": checks}
+    else:
+        return {"status": "needs_review", "failed_checks": [k for k, v in checks.items() if not v]}
+```
+
+#### Manual Review Triggers
+- Content safety flags
+- Audio quality below threshold
+- Duration mismatch >10%
+- Caption sync issues
+
+### Pipeline Performance
+
+| Stage | Avg Time | Bottleneck | Optimization |
+|-------|----------|------------|--------------|
+| Script generation | 30s | LLM API | Prompt caching |
+| Storyboard | 10s | - | - |
+| Video render | 3min | GPU compute | Parallel rendering |
+| TTS | 45s | API latency | Batch processing |
+| Compositing | 2min | I/O | SSD storage |
+| **Total** | **6-7min** | - | Queue system |
+
+---
+
+## 6. Gamification Model
+
+### XP (Experience Points) System
+
+#### XP Sources & Values
+
+| Action | Base XP | Bonus Conditions |
+|--------|---------|------------------|
+| Watch full lesson | 50 | +25 if first attempt |
+| Complete quiz (pass) | 100 | +50 for 100% score |
+| Complete quiz (fail) | 25 | Encouragement XP |
+| Complete project | 200 | +100 for showcase |
+| Daily streak | 30 | Multiplier for longer streaks |
+| Help peer (comment) | 15 | +10 if marked helpful |
+| Course completion | 500 | +250 for under par time |
+
+#### XP Multipliers
+```python
+def calculate_xp(base_xp, user_context):
+    multiplier = 1.0
+    
+    # Streak bonus
+    if user_context.streak >= 7:
+        multiplier += 0.2
+    if user_context.streak >= 30:
+        multiplier += 0.5
+    
+    # First-time bonus
+    if user_context.is_first_attempt:
+        multiplier += 0.5
+    
+    # Performance bonus
+    if user_context.quiz_score == 100:
+        multiplier += 0.5
+    
+    # Time-based
+    if is_weekend(user_context.timestamp):
+        multiplier += 0.1
+    
+    total_xp = int(base_xp * multiplier)
+    
+    return {
+        'xp_earned': total_xp,
+        'breakdown': {
+            'base': base_xp,
+            'multiplier': multiplier
+        }
+    }
+```
+
+### Rank System
+
+#### Levels & Titles
+| XP Range | Rank | Badge Color |
+|----------|------|-------------|
+| 0 - 500 | Seedling | Green |
+| 501 - 1500 | Sprout | Light Green |
+| 1501 - 3500 | Sapling | Yellow-Green |
+| 3501 - 7000 | Young Tree | Yellow |
+| 7001 - 12000 | Growing Oak | Orange |
+| 12001 - 20000 | Mighty Oak | Bronze |
+| 20001 - 35000 | Ancient Willow | Silver |
+| 35000+ | Forest Guardian | Gold |
+
+### Badge System
+
+#### Badge Categories
+
+**1. Achievement Badges**
+```json
+[
+  {
+    "id": "first_course",
+    "name": "First Steps",
+    "description": "Complete your first course",
+    "icon": "trophy",
+    "xp_reward": 100,
+    "criteria": {"courses_completed": 1}
+  },
+  {
+    "id": "perfect_score",
+    "name": "Perfectionist",
+    "description": "Score 100% on any quiz",
+    "icon": "star",
+    "xp_reward": 150,
+    "criteria": {"quiz_score": 100}
+  },
+  {
+    "id": "speed_learner",
+    "name": "Quick Study",
+    "description": "Complete a course in under 50% of expected time",
+    "icon": "lightning",
+    "xp_reward": 200,
+    "criteria": {"completion_time_ratio": 0.5}
+  }
+]
+```
+
+**2. Streak Badges**
+```json
+[
+  {
+    "id": "week_warrior",
+    "name": "Week Warrior",
+    "description": "Maintain a 7-day streak",
+    "criteria": {"streak_days": 7},
+    "xp_reward": 100
+  },
+  {
+    "id": "month_master",
+    "name": "Month Master",
+    "description": "Maintain a 30-day streak",
+    "criteria": {"streak_days": 30},
+    "xp_reward": 500
+  },
+  {
+    "id": "year_legend",
+    "name": "Year Legend",
+    "description": "Maintain a 365-day streak",
+    "criteria": {"streak_days": 365},
+    "xp_reward": 5000
+  }
+]
+```
+
+**3. Community Badges**
+```json
+[
+  {
+    "id": "helpful_hand",
+    "name": "Helpful Hand",
+    "description": "Receive 10 'helpful' votes on comments",
+    "criteria": {"helpful_votes": 10},
+    "xp_reward": 150
+  },
+  {
+    "id": "mentor",
+    "name": "Community Mentor",
+    "description": "Help 50 peers with thoughtful responses",
+    "criteria": {"helpful_comments": 50},
+    "xp_reward": 500
+  }
+]
+```
+
+### Streak System
+
+#### Streak Rules
+```python
+def update_streak(user_id, activity_date):
+    last_active = get_last_active_date(user_id)
+    current_streak = get_current_streak(user_id)
+    
+    # Same day - no change
+    if activity_date == last_active:
+        return current_streak
+    
+    # Next day - increment
+    if activity_date == last_active + timedelta(days=1):
+        new_streak = current_streak + 1
+        award_streak_xp(user_id, xp=30 * (1 + new_streak//7))
+        check_streak_badges(user_id, new_streak)
+        return new_streak
+    
+    # Missed day(s) - reset (with grace period)
+    if activity_date > last_active + timedelta(days=1):
+        if has_streak_freeze(user_id):
+            # Use streak freeze (earned item)
+            consume_streak_freeze(user_id)
+            return current_streak
+        else:
+            reset_streak(user_id)
+            return 1
+```
+
+#### Streak Freeze (Earned Power-up)
+- Earned after 14-day streak
+- Can bank up to 3 freezes
+- Protects streak for 1 missed day
+
+### Weekly Quests
+
+#### Quest Generation (Monday 00:00 UTC)
+```python
+def generate_weekly_quests(user_id):
+    user_profile = get_user_profile(user_id)
+    
+    quests = []
+    
+    # Quest 1: Lesson-based (easy)
+    quests.append({
+        'title': 'Learn & Grow',
+        'description': 'Complete 5 lessons this week',
+        'type': 'lesson_count',
+        'target': 5,
+        'xp_reward': 200,
+        'difficulty': 'easy'
+    })
+    
+    # Quest 2: Mastery-based (medium)
+    quests.append({
+        'title': 'Quiz Master',
+        'description': 'Score above 80% on 3 quizzes',
+        'type': 'quiz_performance',
+        'target': 3,
+        'criteria': {'min_score': 80},
+        'xp_reward': 350,
+        'difficulty': 'medium'
+    })
+    
+    # Quest 3: Personalized (hard)
+    weak_topic = identify_weak_topic(user_id)
+    quests.append({
+        'title': f'Master {weak_topic.name}',
+        'description': f'Complete the {weak_topic.name} module',
+        'type': 'topic_completion',
+        'target_topic': weak_topic.id,
+        'xp_reward': 500,
+        'difficulty': 'hard'
+    })
+    
+    # Quest 4: Community (optional)
+    if user_profile.community_engagement > 0:
+        quests.append({
+            'title': 'Community Helper',
+            'description': 'Post 2 helpful comments',
+            'type': 'community_contribution',
+            'target': 2,
+            'xp_reward': 150,
+            'difficulty': 'easy'
+        })
+    
+    return quests
+```
+
+### Leaderboards
+
+#### Types
+1. **Global Leaderboard** (All users, weekly reset)
+2. **Course Leaderboard** (Per course, monthly)
+3. **Age Group Leaderboard** (Fair competition)
+4. **Friend Leaderboard** (Social feature)
+
+#### Ranking Algorithm
+```python
+def calculate_leaderboard_score(user_id, timeframe='weekly'):
+    activities = get_activities(user_id, timeframe)
+    
+    score = {
+        'xp_earned': sum(a.xp for a in activities),
+        'lessons_completed': count_completed_lessons(activities),
+        'quiz_avg_score': avg_quiz_score(activities),
+        'community_contribution': count_helpful_posts(activities)
+    }
+    
+    # Weighted formula
+    leaderboard_score = (
+        score['xp_earned'] * 1.0 +
+        score['lessons_completed'] * 50 +
+        score['quiz_avg_score'] * 10 +
+        score['community_contribution'] * 30
+    )
+    
+    return leaderboard_score
+```
+
+### Healthy Gamification Practices
+
+#### Anti-Addiction Measures
+```python
+# Daily limits
+MAX_DAILY_XP_FROM_STREAKS = 200
+MAX_DAILY_LESSONS = 20
+
+# Rest reminders
+if user.continuous_learning_minutes > 60:
+    show_break_reminder()
+
+# Diminishing returns for excessive use
+if daily_lessons > 15:
+    xp_multiplier = max(0.5, 1.0 - (daily_lessons - 15) * 0.1)
+```
+
+#### Encouraging Messages
+- Replace "You're on fire!" with "Great progress!"
+- Emphasize learning over competition
+- Celebrate effort, not just outcomes
+- Provide recovery paths after streak breaks
+
+---
+
+*Next: Community & Moderation*
