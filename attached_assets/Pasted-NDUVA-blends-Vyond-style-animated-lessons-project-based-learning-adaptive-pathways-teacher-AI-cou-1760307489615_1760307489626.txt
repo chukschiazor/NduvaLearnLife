@@ -1,0 +1,50 @@
+NDUVA blends Vyond-style animated lessons, project-based learning, adaptive pathways, teacher AI course builder, moderated community, and analytics.
+Your deliverables: crystal-clear architecture, API contracts, UX flows, data models, privacy & safety, DevOps plan, and acceptance tests.
+Guiding Principles
+•	Brand voice: clear, warm, slightly playful. Avoid jargon.
+•	Mobile-first, accessible (WCAG 2.1 AA).
+•	Privacy by design (COPPA, GDPR).
+•	Evidence of learning: reflection + application (projects).
+•	Motivating, not addictive: streaks/XP with healthy nudges.
+•	Teacher empowerment: AI tools to create/publish quickly.
+Build Targets
+•	Web app (React/Next.js) + optional mobile (Flutter/React Native).
+•	Backend: Node.js (NestJS) or Python (FastAPI), Postgres (Core), Redis (sessions/queues), S3/GCS (assets).
+•	Auth: OAuth/email-password + parental consent flows under 13.
+•	AI: LLM (content), TTS, animation/video render, embeddings for retrieval, rules for safety.
+•	Observability: logs, traces, metrics; feature flags; A/B testing.
+Produce (in order)
+1.	High-level architecture diagram (components + data flows).
+2.	ERD & data contracts (Users, Courses, Lessons, Quizzes, Attempts, Badges, Certificates, Posts, ModerationFlags, AnalyticsEvents).
+3.	API surface (REST/GraphQL): endpoints, request/response schemas, auth scopes, rate limits.
+4.	Adaptive engine design (signals → policy → next-lesson recommendations).
+5.	Content pipeline (Prompt → Script → Storyboard → Vyond-style scenes → TTS → captions → packaging).
+6.	Gamification model (XP, badges, streaks, weekly quests).
+7.	Community & moderation (roles, tools, automated filters, escalation).
+8.	Analytics & dashboards (student, teacher, admin).
+9.	Compliance & data retention policy.
+10.	Release roadmap with milestones and acceptance criteria.
+Return everything as concise, implementation-ready specs with JSON where helpful.
+ 
+🧠 Adaptive Learning Engine Prompt
+Use as: SYSTEM prompt for the “Adaptive Engine” micro-service
+Design and implement an Adaptive Learning Engine for NDUVA:
+Inputs (per learner)
+•	Quiz history (accuracy, attempts, time to answer, item difficulty)
+•	Engagement (watch time %, replays, drop-off timestamps)
+•	Reflection quality (rubric: relevance, depth, clarity; scored 0–3)
+•	Pace (login streak, lesson frequency, time-of-day success)
+•	Confidence checks (self-rated 1–5)
+Outputs
+•	Next best lesson (module_id, lesson_id, difficulty level)
+•	Remediation suggestions (micro-videos, glossary, examples)
+•	Stretch tasks (projects, harder items)
+•	Motivational nudge (one sentence, brand-safe)
+Policy
+•	If accuracy < 60% OR drop-off > 40%: recommend remediation at level-1 difficulty.
+•	If accuracy 60–80%: keep level, add 1 targeted micro-drill.
+•	If accuracy > 85% and reflection ≥2: level up difficulty OR unlock project.
+•	Weekly: adjust plan to meet learner’s goal (e.g., “Finish Session 1 in 14 days”).
+Return
+•	Deterministic JSON policy + pseudocode for inference; include cold-start logic (age, self-assessment, pre-test).
+•	Include A/B test hooks and fairness guardrails.
