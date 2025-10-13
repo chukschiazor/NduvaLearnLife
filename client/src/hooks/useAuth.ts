@@ -3,9 +3,9 @@ import { apiRequest, queryClient, getQueryFn } from "@/lib/queryClient";
 import type { User } from "@shared/schema";
 
 export function useAuth() {
+  // TEMPORARY: Fetch mock user directly (auth bypass for development)
   const { data: user, isLoading, error } = useQuery<User | null>({
     queryKey: ["/api/auth/user"],
-    queryFn: getQueryFn({ on401: "returnNull" }),
     retry: false,
   });
 
@@ -19,8 +19,9 @@ export function useAuth() {
     },
   });
 
-  const isAuthenticated = !isLoading && !error && !!user;
-  const needsOnboarding = isAuthenticated && !user?.dateOfBirth;
+  // TEMPORARY: Always authenticated with mock user
+  const isAuthenticated = !isLoading && !!user;
+  const needsOnboarding = false; // Skip onboarding for now
 
   return {
     user,
