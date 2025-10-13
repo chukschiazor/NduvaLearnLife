@@ -1,8 +1,11 @@
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Play, Leaf } from "lucide-react";
+import { useLocation } from "wouter";
 import heroImage from "@assets/generated_images/Students_learning_hero_image_af5a6f00.png";
 
 export default function HeroSection() {
+  const [, setLocation] = useLocation();
+
   return (
     <div className="relative overflow-hidden bg-gradient-to-br from-primary/5 via-background to-secondary/10">
       <div className="absolute top-20 right-20 opacity-10">
@@ -26,7 +29,12 @@ export default function HeroSection() {
             </div>
 
             <div className="flex flex-wrap gap-4">
-              <Button size="lg" className="gap-2" data-testid="button-get-started">
+              <Button 
+                size="lg" 
+                className="gap-2" 
+                onClick={() => setLocation("/onboarding")}
+                data-testid="button-get-started"
+              >
                 Get Started Free
                 <ArrowRight className="h-5 w-5" />
               </Button>

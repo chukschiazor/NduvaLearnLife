@@ -10,7 +10,16 @@ export function useAuth() {
   });
 
   const completeProfileMutation = useMutation({
-    mutationFn: async (data: { role: "learner" | "teacher"; dateOfBirth: string }) => {
+    mutationFn: async (data: { 
+      role: "learner" | "teacher"; 
+      dateOfBirth: string;
+      preferences?: {
+        interests?: string[];
+        skillLevel?: string;
+        learningGoals?: string;
+        learningStyle?: string;
+      };
+    }) => {
       const res = await apiRequest("POST", "/api/auth/complete-profile", data);
       return res.json();
     },

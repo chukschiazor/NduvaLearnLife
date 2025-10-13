@@ -16,12 +16,12 @@ export default function Logo({ className = "", size = "md" }: LogoProps) {
   return (
     <>
       <img
-        src={logoDark}
+        src={logoLight}
         alt="NDUVA"
         className={`dark:hidden ${sizeClasses[size]} ${className}`}
       />
       <img
-        src={logoLight}
+        src={logoDark}
         alt="NDUVA"
         className={`hidden dark:block ${sizeClasses[size]} ${className}`}
       />
