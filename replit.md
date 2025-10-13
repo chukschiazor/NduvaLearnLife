@@ -37,6 +37,7 @@ Preferred communication style: Simple, everyday language.
 - Achievement and certificate display system
 - Community forum with discussion threads
 - Leaderboard with daily/weekly/all-time rankings
+- Adaptive courses page: "Explore Courses" for new users, "My Learning Dashboard" for existing users
 
 ### Backend Architecture
 
@@ -99,13 +100,14 @@ Preferred communication style: Simple, everyday language.
 2. **Learner Personalization** (Multi-step):
    - Step 1: Basic info (firstName, lastName, dateOfBirth)
    - Step 2: AI personalization data (interests, skill level, learning style, learning goals)
-3. **Data Collection for AI**:
-   - Interests: Multi-select from 8 categories (Science, Math, Arts, Technology, Finance, Health, Music, Reading/Writing)
+3. **Data Collection for AI** (Life Skills Focus):
+   - Interests: Multi-select from 8 life skills themes (Money & Finance, Practical Life Skills, Health & Personal Development, Social Skills, Technology & Innovation, Safety & Survival, Culture & Communication, Entrepreneurship & Business)
    - Skill Level: Beginner, Intermediate, or Advanced
    - Learning Style: Visual, Hands-on, Reading, or Listening
    - Learning Goals: Free-text input (optional)
 4. **Storage**: All preferences saved to user.preferences JSONB field for AI-powered personalization
-5. **Design**: Fun, interactive UI with decorative elements, smooth animations, and progress indicators
+5. **Design**: Fun, interactive UI with Lucide icons, decorative elements, smooth animations, and progress indicators
+6. **Post-Onboarding**: Automatic redirect to /courses page after successful profile completion
 
 **Known Behavior:**
 - OAuth errors in logs are expected when users cancel login or have transient network issues
