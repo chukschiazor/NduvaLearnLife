@@ -207,8 +207,23 @@ Preferred communication style: Simple, everyday language.
 
 ### Testing & Compliance
 - ✓ End-to-end test passed: Landing → Demo → Login → Onboarding → Dashboard
+- ✓ Authentication removed (October 13, 2025): Direct access to Dashboard without login
+- ✓ Dashboard handles anonymous users with default values (Learner, 0 XP, 0 streak)
 - ✓ No hover scaling (elevation-only interactions)
 - ✓ No emoji in UI (icon components throughout)
 - ✓ Complete data-testid attribute coverage
 - ✓ Color scheme verified (Electric Green, Deep Navy, Beige)
 - ✓ Real API data integration confirmed
+
+### Authentication Status (Updated October 13, 2025)
+**Current State**: Authentication bypassed for development/testing
+- App.tsx Router provides direct access to all pages
+- No login/onboarding flow required
+- Dashboard displays default values for anonymous users
+- useAuth hook remains in codebase but user may be null
+
+**To Re-enable Authentication** (when needed):
+1. Restore authentication checks in App.tsx Router
+2. Uncomment isAuthenticated and needsOnboarding logic
+3. Re-add LandingPage and Onboarding imports
+4. Update Dashboard to require authenticated user
