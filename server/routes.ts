@@ -14,14 +14,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
-  // ============ Auth Routes ============
-  app.get('/api/auth/user', isAuthenticated, async (req: any, res) => {
+  // ============ Auth Routes (TEMPORARILY DISABLED FOR DEV) ============
+  app.get('/api/auth/user', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
-      if (!user) {
-        return res.status(404).json({ message: "User not found" });
-      }
+      // TEMPORARY: Return mock user for development
+      const user = await (storage as any).getMockUser();
       res.json(user);
     } catch (error) {
       console.error("Error fetching user:", error);
@@ -29,28 +26,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/auth/complete-profile', isAuthenticated, async (req: any, res) => {
+  app.post('/api/auth/complete-profile', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      
-      // Validate request body
-      const validatedData = completeProfileSchema.parse(req.body);
-      
-      const user = await storage.updateUserRole(
-        userId, 
-        validatedData.role, 
-        validatedData.dateOfBirth
-      );
+      // TEMPORARY: Mock profile completion for development
+      const user = await (storage as any).getMockUser();
       res.json(user);
     } catch (error) {
       console.error("Error completing profile:", error);
-      // Check if it's a Zod validation error
-      if (error && typeof error === 'object' && 'issues' in error) {
-        return res.status(400).json({ 
-          message: "Invalid request data", 
-          errors: (error as any).issues 
-        });
-      }
       res.status(500).json({ message: "Failed to update profile" });
     }
   });
@@ -85,10 +67,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/courses', isAuthenticated, async (req: any, res) => {
+  app.post('/api/courses', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const user = await storage.getUser(userId);
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
       
       if (user?.role !== 'teacher' && user?.role !== 'admin') {
         return res.status(403).json({ message: "Only teachers can create courses" });
@@ -96,7 +78,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const courseData = insertCourseSchema.parse({
         ...req.body,
-        createdByTeacherId: userId,
+        createdByTeacherId: user.id,
       });
 
       const course = await storage.createCourse(courseData);
@@ -108,10 +90,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============ Enrollment Routes ============
-  app.get('/api/enrollments/me', isAuthenticated, async (req: any, res) => {
+  app.get('/api/enrollments/me', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const enrollments = await storage.getUserEnrollments(userId);
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
+      const enrollments = await storage.getUserEnrollments(user.id);
       
       // Fetch course details for each enrollment
       const enrichedEnrollments = await Promise.all(
@@ -128,12 +111,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/enrollments', isAuthenticated, async (req: any, res) => {
+  app.post('/api/enrollments', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
       const enrollmentData = insertEnrollmentSchema.parse({
         ...req.body,
-        userId,
+        userId: user.id,
       });
 
       const enrollment = await storage.enrollInCourse(enrollmentData);
@@ -156,10 +140,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.get('/api/users/me/badges', isAuthenticated, async (req: any, res) => {
+  app.get('/api/users/me/badges', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
-      const badges = await storage.getUserBadges(userId);
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
+      const badges = await storage.getUserBadges(user.id);
       res.json(badges);
     } catch (error) {
       console.error("Error fetching badges:", error);
@@ -179,12 +164,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/posts', isAuthenticated, async (req: any, res) => {
+  app.post('/api/posts', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
       const postData = insertPostSchema.parse({
         ...req.body,
-        userId,
+        userId: user.id,
       });
 
       const post = await storage.createPost(postData);
@@ -195,14 +181,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
-  app.post('/api/posts/:postId/comments', isAuthenticated, async (req: any, res) => {
+  app.post('/api/posts/:postId/comments', async (req: any, res) => {
     try {
-      const userId = req.user.claims.sub;
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
       const { postId } = req.params;
       
       const commentData = insertCommentSchema.parse({
         ...req.body,
-        userId,
+        userId: user.id,
         postId,
       });
 
