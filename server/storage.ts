@@ -37,6 +37,7 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserRole(id: string, role: "learner" | "teacher" | "admin", dateOfBirth?: string): Promise<User>;
+  completeUserProfile(id: string, data: { firstName: string; lastName: string; role: "learner" | "teacher"; dateOfBirth: string; preferences?: any }): Promise<User>;
   
   // Course operations
   createCourse(course: InsertCourse): Promise<Course>;
@@ -140,6 +141,24 @@ export class DatabaseStorage implements IStorage {
         role,
         ...(dateOfBirth && { dateOfBirth }),
         updatedAt: new Date() 
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async completeUserProfile(id: string, data: { firstName: string; lastName: string; role: "learner" | "teacher"; dateOfBirth: string; preferences?: any }): Promise<User> {
+    const fullName = `${data.firstName} ${data.lastName}`;
+    const [user] = await db
+      .update(users)
+      .set({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        fullName,
+        role: data.role,
+        dateOfBirth: data.dateOfBirth,
+        ...(data.preferences && { preferences: data.preferences }),
+        updatedAt: new Date()
       })
       .where(eq(users.id, id))
       .returning();

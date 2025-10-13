@@ -296,6 +296,8 @@ export const upsertUserSchema = z.object({
 
 // Complete profile schema for onboarding
 export const completeProfileSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
   role: z.enum(["learner", "teacher"]),
   dateOfBirth: z.string()
     .regex(/^\d{4}-\d{2}-\d{2}$/, "Date must be in YYYY-MM-DD format")
@@ -314,6 +316,12 @@ export const completeProfileSchema = z.object({
       minDate.setFullYear(minDate.getFullYear() - 100);
       return date > minDate;
     }, "Date of birth must be within the last 100 years"),
+  preferences: z.object({
+    interests: z.array(z.string()).optional(),
+    skillLevel: z.string().optional(),
+    learningGoals: z.string().optional(),
+    learningStyle: z.string().optional(),
+  }).optional(),
 });
 
 export const insertCourseSchema = createInsertSchema(courses, {

@@ -28,11 +28,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.post('/api/auth/complete-profile', async (req: any, res) => {
     try {
-      // TEMPORARY: Mock profile completion for development
-      const user = await (storage as any).getMockUser();
-      res.json(user);
-    } catch (error) {
+      const validatedData = completeProfileSchema.parse(req.body);
+      
+      // TEMPORARY: Use mock user for development
+      const mockUser = await (storage as any).getMockUser();
+      
+      // Update the user profile with onboarding data
+      const updatedUser = await storage.completeUserProfile(mockUser.id, validatedData);
+      
+      res.json(updatedUser);
+    } catch (error: any) {
       console.error("Error completing profile:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
       res.status(500).json({ message: "Failed to update profile" });
     }
   });

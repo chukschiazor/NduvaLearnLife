@@ -11,6 +11,8 @@ export function useAuth() {
 
   const completeProfileMutation = useMutation({
     mutationFn: async (data: { 
+      firstName: string;
+      lastName: string;
       role: "learner" | "teacher"; 
       dateOfBirth: string;
       preferences?: {

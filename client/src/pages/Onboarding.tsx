@@ -97,6 +97,8 @@ export default function Onboarding() {
 
     try {
       await completeProfile({ 
+        firstName,
+        lastName,
         role, 
         dateOfBirth,
         preferences: {
