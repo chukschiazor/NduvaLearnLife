@@ -75,6 +75,37 @@ export class DatabaseStorage implements IStorage {
     return user;
   }
 
+  async getMockUser(): Promise<User> {
+    const mockUserId = "mock-user-123";
+    let user = await this.getUser(mockUserId);
+    
+    if (!user) {
+      user = await this.upsertUser({
+        id: mockUserId,
+        email: "learner@nduva.com",
+        firstName: "Demo",
+        lastName: "Learner",
+        profileImageUrl: null,
+      });
+      
+      // Set them as a learner with some progress
+      user = await this.updateUserRole(mockUserId, "learner", "2010-01-15");
+      
+      // Give them some XP and streak
+      await db.update(users)
+        .set({ 
+          xpPoints: 450, 
+          currentStreak: 5,
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, mockUserId));
+      
+      user = await this.getUser(mockUserId) as User;
+    }
+    
+    return user;
+  }
+
   async upsertUser(userData: UpsertUser): Promise<User> {
     // Compute fullName from firstName and lastName if available
     const fullName = userData.firstName && userData.lastName 
