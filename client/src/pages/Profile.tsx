@@ -235,7 +235,7 @@ export default function Profile() {
             </div>
 
             {/* Detailed Achievement Badges */}
-            <Card className="border-primary/10">
+            <Card className="bg-card/80 backdrop-blur-sm border-primary/10">
               <CardHeader>
                 <CardTitle className="font-display text-xl">Achievements</CardTitle>
               </CardHeader>
@@ -316,7 +316,7 @@ export default function Profile() {
             </Card>
 
             {/* Latest Certificate */}
-            <Card className="border-primary/10">
+            <Card className="bg-card/80 backdrop-blur-sm border-primary/10">
               <CardHeader>
                 <CardTitle className="font-display text-xl">Latest Certificate</CardTitle>
               </CardHeader>
