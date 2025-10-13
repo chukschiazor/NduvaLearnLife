@@ -57,7 +57,8 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit OAuth fully integrated with session management
 - **Storage Layer**: DatabaseStorage implementation with CRUD operations for all entities
 - **API Routes**: RESTful endpoints for auth, courses, enrollments, gamification, and community
-- **Frontend Auth**: useAuth hook, landing page, and onboarding flow
+- **Frontend Auth**: useAuth hook, landing page, and enhanced onboarding flow
+- **Onboarding**: Multi-step learner onboarding with AI personalization data collection (✓ October 13, 2025)
 - **Development**: HMR via Vite, TypeScript type safety throughout
 
 ### Data Architecture
@@ -89,9 +90,22 @@ Preferred communication style: Simple, everyday language.
 1. Landing page with "Start Learning" CTA for unauthenticated users
 2. OAuth login via /api/login → Replit OIDC flow
 3. Callback to /api/callback creates user session and upserts user
-4. First-time users complete onboarding (role selection + date of birth)
+4. First-time users complete onboarding (role selection + personalization)
 5. Authenticated users access full app with role-based features
 6. Dashboard displays navigation (My Courses, Leaderboard, Forum, Profile)
+
+**Enhanced Onboarding Flow (✓ October 13, 2025):**
+1. **Role Selection**: Interactive card-based UI to choose Learner or Teacher path
+2. **Learner Personalization** (Multi-step):
+   - Step 1: Basic info (firstName, lastName, dateOfBirth)
+   - Step 2: AI personalization data (interests, skill level, learning style, learning goals)
+3. **Data Collection for AI**:
+   - Interests: Multi-select from 8 categories (Science, Math, Arts, Technology, Finance, Health, Music, Reading/Writing)
+   - Skill Level: Beginner, Intermediate, or Advanced
+   - Learning Style: Visual, Hands-on, Reading, or Listening
+   - Learning Goals: Free-text input (optional)
+4. **Storage**: All preferences saved to user.preferences JSONB field for AI-powered personalization
+5. **Design**: Fun, interactive UI with decorative elements, smooth animations, and progress indicators
 
 **Known Behavior:**
 - OAuth errors in logs are expected when users cancel login or have transient network issues
@@ -102,6 +116,7 @@ Preferred communication style: Simple, everyday language.
 - OAuth fields: id (sub), email, firstName, lastName, profileImageUrl
 - Platform fields: role, dateOfBirth, xpPoints, currentStreak, fullName
 - Computed fullName from firstName + lastName for display
+- Preferences (JSONB): interests[], skillLevel, learningStyle, learningGoals (collected during onboarding for AI personalization)
 
 **Privacy & Compliance (Planned):**
 - Parental consent workflow for users under 13 (COPPA)
