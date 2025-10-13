@@ -54,12 +54,14 @@ Preferred communication style: Simple, everyday language.
 - Middleware for request logging and error handling
 
 **Current State (Phase 1 MVP - Foundation Complete):**
-- **Database**: Complete schema with 15+ tables deployed to PostgreSQL
+- **Database**: Complete schema with 17+ tables deployed to PostgreSQL (including modules and course_sessions)
 - **Authentication**: Replit OAuth fully integrated with session management
 - **Storage Layer**: DatabaseStorage implementation with CRUD operations for all entities
-- **API Routes**: RESTful endpoints for auth, courses, enrollments, gamification, and community
-- **Frontend Auth**: useAuth hook, landing page, and enhanced onboarding flow
+- **API Routes**: RESTful endpoints for auth, courses, modules, sessions, enrollments, gamification, and community
+- **Frontend Auth**: useAuth hook, landing page, enhanced onboarding flow, sign in/sign up buttons
 - **Onboarding**: Multi-step learner onboarding with AI personalization data collection (✓ October 13, 2025)
+- **Admin Dashboard**: Course management with Coursera-style modules and sessions (✓ October 13, 2025)
+- **Classroom**: Video player with module/session navigation and progress tracking (✓ October 13, 2025)
 - **Development**: HMR via Vite, TypeScript type safety throughout
 
 ### Data Architecture
@@ -116,9 +118,16 @@ Preferred communication style: Simple, everyday language.
 
 **User Schema (Merged Replit Auth + Platform Fields):**
 - OAuth fields: id (sub), email, firstName, lastName, profileImageUrl
-- Platform fields: role, dateOfBirth, xpPoints, currentStreak, fullName
+- Platform fields: role (learner/teacher/admin), dateOfBirth, xpPoints, currentStreak, fullName
 - Computed fullName from firstName + lastName for display
 - Preferences (JSONB): interests[], skillLevel, learningStyle, learningGoals (collected during onboarding for AI personalization)
+
+**Course Structure (Coursera-style):**
+- **Courses**: Top-level learning experiences with title, description, age group, difficulty
+- **Modules**: Organize course content into logical sections (e.g., "Week 1: Introduction")
+- **Sessions**: Individual video lessons within modules (formerly "lessons")
+- Hierarchy: Course → Modules → Sessions
+- Each level has sequenceOrder for proper navigation
 
 **Privacy & Compliance (Planned):**
 - Parental consent workflow for users under 13 (COPPA)
