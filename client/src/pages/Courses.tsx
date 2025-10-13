@@ -1,13 +1,22 @@
 import Navbar from "@/components/Navbar";
 import CourseCard from "@/components/CourseCard";
 import StatsCard from "@/components/StatsCard";
-import { BookOpen, Target, TrendingUp, Flame } from "lucide-react";
+import { BookOpen, Target, TrendingUp, Flame, Sparkles, GraduationCap } from "lucide-react";
 import budgetingImg from "@assets/generated_images/Budgeting_module_thumbnail_a94e4967.png";
 import creativityImg from "@assets/generated_images/Creativity_module_thumbnail_fe82ef99.png";
 import problemSolvingImg from "@assets/generated_images/Problem-solving_module_thumbnail_08a22595.png";
 import investingImg from "@assets/generated_images/Investing_module_thumbnail_ebfef553.png";
+import { useQuery } from "@tanstack/react-query";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import type { EnrollmentWithCourse } from "@shared/schema";
 
 export default function Courses() {
+  // Fetch user's enrollments to determine if they're a new user
+  const { data: enrollments, isLoading } = useQuery<EnrollmentWithCourse[]>({
+    queryKey: ['/api/enrollments/me'],
+  });
+  
   const stats = [
     { title: "Lessons Completed", value: 24, icon: BookOpen, description: "Keep up the great work!", trend: { value: 12, isPositive: true } },
     { title: "Quiz Average", value: "87%", icon: Target, description: "Above average", trend: { value: 5, isPositive: true } },
@@ -62,6 +71,51 @@ export default function Courses() {
     },
   ];
 
+  const isNewUser = !isLoading && Array.isArray(enrollments) && enrollments.length === 0;
+
+  // Loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center py-12">
+            <p className="text-muted-foreground">Loading your courses...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // New user view - Explore Courses
+  if (isNewUser) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="mb-12 text-center">
+            <div className="inline-flex items-center gap-2 mb-4">
+              <Sparkles className="h-8 w-8 text-primary" />
+              <h1 className="font-display font-bold text-4xl md:text-5xl">Explore Courses</h1>
+              <GraduationCap className="h-8 w-8 text-secondary" />
+            </div>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              Start your learning journey! Pick a course that matches your interests and goals.
+            </p>
+          </div>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {courses.map((course) => (
+              <CourseCard key={course.id} {...course} isExploreMode={true} />
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Existing user view - My Learning Dashboard
   return (
     <div className="min-h-screen bg-background">
       <Navbar />

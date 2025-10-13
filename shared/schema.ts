@@ -354,6 +354,7 @@ export type QuizQuestion = typeof quizQuestions.$inferSelect;
 export type QuizAnswer = typeof quizAnswers.$inferSelect;
 export type Enrollment = typeof enrollments.$inferSelect;
 export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
+export type EnrollmentWithCourse = Enrollment & { course: Course | null };
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type InsertQuizAttempt = z.infer<typeof insertQuizAttemptSchema>;
 export type LessonView = typeof lessonViews.$inferSelect;

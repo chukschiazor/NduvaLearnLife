@@ -5,22 +5,23 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { User, GraduationCap, Sparkles, Target, Brain, Rocket, Book, Palette, Calculator, Globe, Heart, Music } from "lucide-react";
+import { User, GraduationCap, DollarSign, Wrench, HeartPulse, Users, Lightbulb, Shield, MessageCircle, Briefcase, Target, Brain, Rocket, Sparkles, Book } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { Progress } from "@/components/ui/progress";
+import { useLocation } from "wouter";
 
 type OnboardingStep = "role" | "learner-info" | "learner-preferences";
 
 const interestOptions = [
-  { id: "science", label: "Science", icon: Sparkles },
-  { id: "math", label: "Mathematics", icon: Calculator },
-  { id: "arts", label: "Arts & Creativity", icon: Palette },
-  { id: "technology", label: "Technology", icon: Rocket },
-  { id: "finance", label: "Finance & Money", icon: Globe },
-  { id: "health", label: "Health & Wellness", icon: Heart },
-  { id: "music", label: "Music", icon: Music },
-  { id: "reading", label: "Reading & Writing", icon: Book },
+  { id: "finance", label: "Money & Finance", icon: DollarSign, desc: "Budgeting, Investing, Financial Literacy" },
+  { id: "practical", label: "Practical Life Skills", icon: Wrench, desc: "Cooking, Home Repair, Car Maintenance" },
+  { id: "health", label: "Health & Personal Development", icon: HeartPulse, desc: "Mental Health, Stress Management, Character & Ethics" },
+  { id: "social", label: "Social Skills", icon: Users, desc: "Public Speaking, Social Etiquette" },
+  { id: "technology", label: "Technology & Innovation", icon: Lightbulb, desc: "Coding, Digital Skills" },
+  { id: "safety", label: "Safety & Survival", icon: Shield, desc: "Self Defense, Survival Skills, Insurance" },
+  { id: "culture", label: "Culture & Communication", icon: MessageCircle, desc: "Languages, Reading & Writing" },
+  { id: "business", label: "Entrepreneurship & Business", icon: Briefcase, desc: "Accounting, Real Estate, Globalism" },
 ];
 
 const skillLevels = [
@@ -30,15 +31,16 @@ const skillLevels = [
 ];
 
 const learningStyles = [
-  { id: "visual", label: "Visual", desc: "I learn best by seeing", icon: "👀" },
-  { id: "hands-on", label: "Hands-on", desc: "I learn by doing", icon: "✋" },
-  { id: "reading", label: "Reading", desc: "I prefer text content", icon: "📚" },
-  { id: "listening", label: "Listening", desc: "I learn by hearing", icon: "👂" },
+  { id: "visual", label: "Visual", desc: "I learn best by seeing", icon: Target },
+  { id: "hands-on", label: "Hands-on", desc: "I learn by doing", icon: Wrench },
+  { id: "reading", label: "Reading", desc: "I prefer text content", icon: Book },
+  { id: "listening", label: "Listening", desc: "I learn by hearing", icon: HeartPulse },
 ];
 
 export default function Onboarding() {
   const { completeProfile, isCompletingProfile } = useAuth();
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   
   const [step, setStep] = useState<OnboardingStep>("role");
   const [role, setRole] = useState<"learner" | "teacher">("learner");
@@ -86,10 +88,19 @@ export default function Onboarding() {
   };
 
   const handleSubmit = async () => {
-    if (!skillLevel || !learningStyle || interests.length === 0) {
+    if (interests.length < 2) {
+      toast({
+        title: "Select more interests",
+        description: "Please select at least 2 topics that interest you",
+        variant: "destructive",
+      });
+      return;
+    }
+    
+    if (!skillLevel || !learningStyle) {
       toast({
         title: "Complete your profile",
-        description: "Please select your interests, skill level, and learning style",
+        description: "Please select your skill level and learning style",
         variant: "destructive",
       });
       return;
@@ -113,6 +124,9 @@ export default function Onboarding() {
         title: "Welcome to NDUVA!",
         description: "Your personalized learning journey is ready!",
       });
+      
+      // Redirect to courses page after successful profile completion
+      setTimeout(() => setLocation("/courses"), 1000);
     } catch (error) {
       toast({
         title: "Error",
@@ -292,8 +306,8 @@ export default function Onboarding() {
             <div className="space-y-8">
               {/* Interests */}
               <div className="space-y-4">
-                <Label className="text-lg font-semibold">What are you interested in? (Select all that apply)</Label>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <Label className="text-lg font-semibold">What topics interest you? (Select at least 2)</Label>
+                <div className="grid md:grid-cols-2 gap-4">
                   {interestOptions.map((interest) => {
                     const Icon = interest.icon;
                     const isSelected = interests.includes(interest.id);
@@ -306,11 +320,16 @@ export default function Onboarding() {
                         onClick={() => toggleInterest(interest.id)}
                         data-testid={`card-interest-${interest.id}`}
                       >
-                        <div className="flex flex-col items-center text-center gap-2">
-                          <Icon className={`h-8 w-8 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
-                          <span className={`text-sm font-medium ${isSelected ? 'text-primary' : ''}`}>
-                            {interest.label}
-                          </span>
+                        <div className="flex items-start gap-3">
+                          <div className={`p-2 rounded-lg ${isSelected ? 'bg-primary/20' : 'bg-muted'}`}>
+                            <Icon className={`h-6 w-6 ${isSelected ? 'text-primary' : 'text-muted-foreground'}`} />
+                          </div>
+                          <div className="flex-1">
+                            <div className={`font-semibold mb-1 ${isSelected ? 'text-primary' : ''}`}>
+                              {interest.label}
+                            </div>
+                            <div className="text-xs text-muted-foreground">{interest.desc}</div>
+                          </div>
                         </div>
                       </Card>
                     );
@@ -346,24 +365,27 @@ export default function Onboarding() {
               <div className="space-y-4">
                 <Label className="text-lg font-semibold">How do you learn best?</Label>
                 <div className="grid md:grid-cols-4 gap-4">
-                  {learningStyles.map((style) => (
-                    <Card
-                      key={style.id}
-                      className={`p-4 cursor-pointer transition-all hover-elevate active-elevate-2 ${
-                        learningStyle === style.id ? 'border-primary bg-primary/5' : ''
-                      }`}
-                      onClick={() => setLearningStyle(style.id)}
-                      data-testid={`card-learning-style-${style.id}`}
-                    >
-                      <div className="text-center space-y-2">
-                        <div className="text-3xl">{style.icon}</div>
-                        <div className={`font-semibold ${learningStyle === style.id ? 'text-primary' : ''}`}>
-                          {style.label}
+                  {learningStyles.map((style) => {
+                    const Icon = style.icon;
+                    return (
+                      <Card
+                        key={style.id}
+                        className={`p-4 cursor-pointer transition-all hover-elevate active-elevate-2 ${
+                          learningStyle === style.id ? 'border-primary bg-primary/5' : ''
+                        }`}
+                        onClick={() => setLearningStyle(style.id)}
+                        data-testid={`card-learning-style-${style.id}`}
+                      >
+                        <div className="text-center space-y-2">
+                          <Icon className={`h-8 w-8 mx-auto ${learningStyle === style.id ? 'text-primary' : 'text-muted-foreground'}`} />
+                          <div className={`font-semibold ${learningStyle === style.id ? 'text-primary' : ''}`}>
+                            {style.label}
+                          </div>
+                          <div className="text-xs text-muted-foreground">{style.desc}</div>
                         </div>
-                        <div className="text-xs text-muted-foreground">{style.desc}</div>
-                      </div>
-                    </Card>
-                  ))}
+                      </Card>
+                    );
+                  })}
                 </div>
               </div>
 

@@ -13,6 +13,7 @@ interface CourseCardProps {
   completedLessons: number;
   duration: string;
   ageGroup: string;
+  isExploreMode?: boolean;
 }
 
 export default function CourseCard({
@@ -24,6 +25,7 @@ export default function CourseCard({
   completedLessons,
   duration,
   ageGroup,
+  isExploreMode = false,
 }: CourseCardProps) {
   const isCompleted = progress === 100;
 
@@ -59,22 +61,31 @@ export default function CourseCard({
       </CardHeader>
 
       <CardContent className="space-y-3">
-        <div className="space-y-2">
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-muted-foreground">Progress</span>
-            <span className="font-medium" data-testid="text-course-progress">{progress}%</span>
+        {!isExploreMode && (
+          <>
+            <div className="space-y-2">
+              <div className="flex items-center justify-between text-sm">
+                <span className="text-muted-foreground">Progress</span>
+                <span className="font-medium" data-testid="text-course-progress">{progress}%</span>
+              </div>
+              <Progress value={progress} className="h-2" />
+            </div>
+            <div className="text-sm text-muted-foreground">
+              {completedLessons} of {totalLessons} lessons completed
+            </div>
+          </>
+        )}
+        {isExploreMode && (
+          <div className="text-sm text-muted-foreground">
+            {totalLessons} lessons • {duration}
           </div>
-          <Progress value={progress} className="h-2" />
-        </div>
-        <div className="text-sm text-muted-foreground">
-          {completedLessons} of {totalLessons} lessons completed
-        </div>
+        )}
       </CardContent>
 
       <CardFooter>
         <Button className="w-full gap-2" data-testid="button-continue-course">
           <Play className="h-4 w-4" />
-          {isCompleted ? "Review Course" : "Continue Learning"}
+          {isExploreMode ? "Start Course" : isCompleted ? "Review Course" : "Continue Learning"}
         </Button>
       </CardFooter>
     </Card>
