@@ -14,9 +14,13 @@ export default function HexagonalAvatar({ src, fallback, size = "md" }: Hexagona
   };
 
   return (
-    <div className="relative" style={{ 
-      clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
-    }}>
+    <div 
+      className="relative" 
+      data-testid="hexagonal-avatar-wrapper"
+      style={{ 
+        clipPath: "polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%)",
+      }}
+    >
       <Avatar className={`${sizeClasses[size]} rounded-none`}>
         {src && <AvatarImage src={src || undefined} alt={fallback} />}
         <AvatarFallback className="bg-primary text-primary-foreground text-2xl font-bold rounded-none">
