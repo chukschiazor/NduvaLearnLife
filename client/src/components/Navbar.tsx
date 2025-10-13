@@ -1,13 +1,15 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Trophy, MessageSquare, User, Menu, X } from "lucide-react";
+import { BookOpen, Trophy, MessageSquare, User, Menu, X, LogIn } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Logo from "./Logo";
 import { useState } from "react";
+import { useAuth, login } from "@/hooks/useAuth";
 
 export default function Navbar() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { isAuthenticated, isLoading } = useAuth();
 
   const navItems = [
     { path: "/courses", label: "My Courses", icon: BookOpen },
@@ -26,39 +28,64 @@ export default function Navbar() {
             </div>
           </Link>
 
-          <div className="hidden md:flex items-center gap-1">
-            {navItems.map((item) => {
-              const Icon = item.icon;
-              const isActive = location === item.path;
-              return (
-                <Link key={item.path} href={item.path} data-testid={`link-${item.label.toLowerCase().replace(' ', '-')}`}>
+          {!isLoading && (
+            <>
+              {isAuthenticated ? (
+                <div className="hidden md:flex items-center gap-1">
+                  {navItems.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = location === item.path;
+                    return (
+                      <Link key={item.path} href={item.path} data-testid={`link-${item.label.toLowerCase().replace(' ', '-')}`}>
+                        <Button
+                          variant={isActive ? "secondary" : "ghost"}
+                          className="gap-2"
+                        >
+                          <Icon className="h-4 w-4" />
+                          {item.label}
+                        </Button>
+                      </Link>
+                    );
+                  })}
+                </div>
+              ) : (
+                <div className="hidden md:flex items-center gap-2">
                   <Button
-                    variant={isActive ? "secondary" : "ghost"}
-                    className="gap-2"
+                    variant="ghost"
+                    onClick={login}
+                    data-testid="button-sign-in"
                   >
-                    <Icon className="h-4 w-4" />
-                    {item.label}
+                    Sign In
                   </Button>
-                </Link>
-              );
-            })}
-          </div>
+                  <Button
+                    onClick={login}
+                    data-testid="button-sign-up"
+                  >
+                    <LogIn className="h-4 w-4 mr-2" />
+                    Sign Up
+                  </Button>
+                </div>
+              )}
+            </>
+          )}
 
           <div className="flex items-center gap-2">
             <ThemeToggle />
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              data-testid="button-mobile-menu"
-            >
-              {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-            </Button>
+            {isAuthenticated && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                data-testid="button-mobile-menu"
+              >
+                {mobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            )}
           </div>
         </div>
 
-        {mobileMenuOpen && (
+        {mobileMenuOpen && isAuthenticated && (
           <div className="md:hidden py-4 space-y-1">
             {navItems.map((item) => {
               const Icon = item.icon;
