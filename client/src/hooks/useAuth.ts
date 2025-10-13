@@ -30,9 +30,11 @@ export function useAuth() {
     },
   });
 
-  // DEVELOPMENT MODE: Authenticated when user is loaded, no onboarding required
+  // User is authenticated when user data is loaded
   const isAuthenticated = !!user;
-  const needsOnboarding = false;
+  
+  // User needs onboarding if they don't have a role set yet
+  const needsOnboarding = isAuthenticated && !user.role;
 
   return {
     user,

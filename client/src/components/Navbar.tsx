@@ -1,6 +1,6 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Trophy, MessageSquare, User, Menu, X, LogIn } from "lucide-react";
+import { BookOpen, Trophy, MessageSquare, User, Menu, X, LogIn, Settings } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Logo from "./Logo";
 import { useState } from "react";
@@ -9,7 +9,10 @@ import { useAuth, login } from "@/hooks/useAuth";
 export default function Navbar() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading } = useAuth();
+
+  // Show Admin link only for admin/teacher roles
+  const isAdminOrTeacher = user?.role === "admin" || user?.role === "teacher";
 
   const navItems = [
     { path: "/courses", label: "My Courses", icon: BookOpen },
@@ -17,6 +20,11 @@ export default function Navbar() {
     { path: "/forum", label: "Forum", icon: MessageSquare },
     { path: "/profile", label: "Profile", icon: User },
   ];
+
+  // Add Admin link for admin/teacher users
+  if (isAdminOrTeacher) {
+    navItems.push({ path: "/admin", label: "Admin", icon: Settings });
+  }
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">

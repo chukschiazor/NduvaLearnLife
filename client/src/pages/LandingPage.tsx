@@ -1,27 +1,96 @@
 import { Button } from "@/components/ui/button";
 import { login } from "@/hooks/useAuth";
 import { Sparkles, Trophy, Users, Zap } from "lucide-react";
+import heroImage from "@assets/generated_images/Students_learning_hero_image_af5a6f00.png";
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-teal-50 via-cyan-50 to-blue-50 dark:from-gray-900 dark:via-gray-800 dark:to-gray-900">
-      <div className="container mx-auto px-4 py-16">
-        <div className="text-center space-y-6 mb-16">
-          <h1 className="text-5xl md:text-7xl font-bold bg-gradient-to-r from-teal-600 to-cyan-600 dark:from-teal-400 dark:to-cyan-400 bg-clip-text text-transparent">
-            NDUVA
-          </h1>
-          <p className="text-xl md:text-2xl text-muted-foreground max-w-2xl mx-auto">
-            An adaptive, gamified learning platform that grows with you
-          </p>
-          <div className="flex gap-4 justify-center flex-wrap">
+    <div className="min-h-screen bg-background">
+      {/* Navigation */}
+      <nav className="border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container mx-auto px-4 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <svg viewBox="0 0 24 24" className="h-8 w-8 text-teal-500" fill="currentColor">
+              <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+            </svg>
+            <span className="font-semibold text-lg">Nduva</span>
+          </div>
+          
+          <div className="flex items-center gap-3">
             <Button 
-              size="lg" 
+              variant="ghost" 
               onClick={login}
-              className="text-lg px-8"
-              data-testid="button-login"
+              data-testid="button-sign-in"
             >
-              Start Learning
+              Sign In
             </Button>
+            <Button 
+              onClick={login}
+              className="bg-teal-500 hover:bg-teal-600 text-white"
+              data-testid="button-sign-up"
+            >
+              Sign Up
+            </Button>
+          </div>
+        </div>
+      </nav>
+
+      {/* Hero Section */}
+      <div className="container mx-auto px-4 py-16">
+        <div className="grid lg:grid-cols-2 gap-12 items-center mb-20">
+          <div className="space-y-6">
+            <h1 className="text-5xl md:text-6xl font-bold leading-tight">
+              Master Life Skills Through{" "}
+              <span className="text-teal-500">Interactive Learning</span>
+            </h1>
+            <p className="text-lg text-muted-foreground max-w-xl">
+              Join thousands of students aged 10-23 learning essential life skills 
+              through engaging animated videos, interactive quizzes, and real-world projects.
+            </p>
+            <div className="flex gap-4 flex-wrap">
+              <Button 
+                size="lg" 
+                onClick={login}
+                className="bg-teal-500 hover:bg-teal-600 text-white text-lg px-8"
+                data-testid="button-get-started"
+              >
+                Get Started Free
+              </Button>
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="text-lg px-8"
+                data-testid="button-watch-demo"
+              >
+                Watch Demo
+              </Button>
+            </div>
+            
+            {/* Stats */}
+            <div className="grid grid-cols-3 gap-6 pt-8">
+              <div>
+                <div className="text-3xl font-bold text-teal-500">5,000+</div>
+                <div className="text-sm text-muted-foreground">Active Students</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-teal-500">50+</div>
+                <div className="text-sm text-muted-foreground">Video Lessons</div>
+              </div>
+              <div>
+                <div className="text-3xl font-bold text-teal-500">95%</div>
+                <div className="text-sm text-muted-foreground">Completion Rate</div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative">
+            <div className="bg-gradient-to-br from-teal-100 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-3xl p-8">
+              <img 
+                src={heroImage} 
+                alt="Students learning together" 
+                className="w-full h-auto rounded-2xl shadow-2xl"
+              />
+            </div>
           </div>
         </div>
 
