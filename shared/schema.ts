@@ -99,7 +99,35 @@ export const courses = pgTable("courses", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Lessons
+// Modules (Coursera-style course organization)
+export const modules = pgTable("modules", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  courseId: varchar("course_id").notNull().references(() => courses.id),
+  sequenceOrder: integer("sequence_order").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Course Sessions (video content within modules - Coursera style)
+export const courseSessions = pgTable("course_sessions", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  moduleId: varchar("module_id").notNull().references(() => modules.id),
+  sequenceOrder: integer("sequence_order").notNull(),
+  title: text("title").notNull(),
+  description: text("description"),
+  videoUrl: text("video_url"),
+  durationSeconds: integer("duration_seconds"),
+  transcript: jsonb("transcript"),
+  captions: jsonb("captions"),
+  lessonType: lessonTypeEnum("lesson_type").notNull().default("video"),
+  prerequisites: jsonb("prerequisites").default([]),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Keep legacy lessons table for backward compatibility (can be migrated later)
 export const lessons = pgTable("lessons", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   courseId: varchar("course_id").notNull().references(() => courses.id),
@@ -331,6 +359,8 @@ export const insertCourseSchema = createInsertSchema(courses, {
   difficulty: z.enum(["beginner", "intermediate", "advanced"]),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 
+export const insertModuleSchema = createInsertSchema(modules).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertCourseSessionSchema = createInsertSchema(courseSessions).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertLessonSchema = createInsertSchema(lessons).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertQuizSchema = createInsertSchema(quizzes).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertQuizQuestionSchema = createInsertSchema(quizQuestions).omit({ id: true, createdAt: true });
@@ -346,6 +376,10 @@ export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
+export type Module = typeof modules.$inferSelect;
+export type InsertModule = z.infer<typeof insertModuleSchema>;
+export type CourseSession = typeof courseSessions.$inferSelect;
+export type InsertCourseSession = z.infer<typeof insertCourseSessionSchema>;
 export type Lesson = typeof lessons.$inferSelect;
 export type InsertLesson = z.infer<typeof insertLessonSchema>;
 export type Quiz = typeof quizzes.$inferSelect;

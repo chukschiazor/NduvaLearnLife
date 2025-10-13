@@ -1,6 +1,8 @@
 import {
   users,
   courses,
+  modules,
+  courseSessions,
   lessons,
   quizzes,
   quizQuestions,
@@ -17,6 +19,10 @@ import {
   type UpsertUser,
   type Course,
   type InsertCourse,
+  type Module,
+  type InsertModule,
+  type CourseSession,
+  type InsertCourseSession,
   type Lesson,
   type InsertLesson,
   type Quiz,
@@ -45,7 +51,17 @@ export interface IStorage {
   getCourses(filters?: { ageGroup?: string; difficulty?: string; status?: string }): Promise<Course[]>;
   updateCourse(id: string, course: Partial<InsertCourse>): Promise<Course>;
   
-  // Lesson operations
+  // Module operations (Coursera-style)
+  createModule(module: InsertModule): Promise<Module>;
+  getModulesByCourse(courseId: string): Promise<Module[]>;
+  getModule(id: string): Promise<Module | undefined>;
+  
+  // Course Session operations
+  createCourseSession(session: InsertCourseSession): Promise<CourseSession>;
+  getSessionsByModule(moduleId: string): Promise<CourseSession[]>;
+  getCourseSession(id: string): Promise<CourseSession | undefined>;
+  
+  // Lesson operations (legacy)
   createLesson(lesson: InsertLesson): Promise<Lesson>;
   getLessonsByCourse(courseId: string): Promise<Lesson[]>;
   getLesson(id: string): Promise<Lesson | undefined>;
@@ -199,7 +215,37 @@ export class DatabaseStorage implements IStorage {
     return course;
   }
 
-  // Lesson operations
+  // Module operations (Coursera-style)
+  async createModule(module: InsertModule): Promise<Module> {
+    const [newModule] = await db.insert(modules).values(module).returning();
+    return newModule;
+  }
+
+  async getModulesByCourse(courseId: string): Promise<Module[]> {
+    return db.select().from(modules).where(eq(modules.courseId, courseId)).orderBy(modules.sequenceOrder);
+  }
+
+  async getModule(id: string): Promise<Module | undefined> {
+    const [module] = await db.select().from(modules).where(eq(modules.id, id));
+    return module;
+  }
+
+  // Course Session operations
+  async createCourseSession(session: InsertCourseSession): Promise<CourseSession> {
+    const [newSession] = await db.insert(courseSessions).values(session).returning();
+    return newSession;
+  }
+
+  async getSessionsByModule(moduleId: string): Promise<CourseSession[]> {
+    return db.select().from(courseSessions).where(eq(courseSessions.moduleId, moduleId)).orderBy(courseSessions.sequenceOrder);
+  }
+
+  async getCourseSession(id: string): Promise<CourseSession | undefined> {
+    const [session] = await db.select().from(courseSessions).where(eq(courseSessions.id, id));
+    return session;
+  }
+
+  // Lesson operations (legacy)
   async createLesson(lesson: InsertLesson): Promise<Lesson> {
     const [newLesson] = await db.insert(lessons).values(lesson).returning();
     
