@@ -13,9 +13,14 @@ import {
   Zap, 
   CheckCircle2, 
   Circle,
-  BarChart3,
-  Award
+  Award,
+  Settings,
+  Target,
+  Star,
+  TrendingUp,
+  Download
 } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 type Enrollment = {
   id: string;
@@ -84,6 +89,12 @@ export default function Profile() {
                     </p>
                   </div>
 
+                  {/* Edit Profile Button */}
+                  <Button variant="outline" size="sm" className="gap-2 w-full" data-testid="button-edit-profile">
+                    <Settings className="h-4 w-4" />
+                    Edit Profile
+                  </Button>
+
                   {/* Achievement Badges */}
                   <div className="flex gap-4 pt-4">
                     <CircularBadge 
@@ -142,20 +153,6 @@ export default function Profile() {
 
           {/* Main Dashboard Area */}
           <div className="space-y-6">
-            {/* Dashboard Header */}
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <h1 className="font-display font-bold text-3xl text-foreground" data-testid="heading-dashboard-step">
-                  Dashboard Step
-                </h1>
-                <p className="text-muted-foreground mt-1">A Smart Club Learning Platform MVP</p>
-              </div>
-              <Badge variant="outline" className="gap-2 border-primary/20" data-testid="badge-track-id">
-                <BarChart3 className="h-4 w-4" />
-                Track ID
-              </Badge>
-            </div>
-
             {/* Progress Overview */}
             <div className="grid md:grid-cols-2 gap-6">
               {/* Ongoing/Done Status */}
@@ -191,37 +188,173 @@ export default function Profile() {
                 </CardContent>
               </Card>
 
-              {/* Achievement Badges Display */}
+              {/* Learning Time / Streak Chart */}
               <Card className="border-primary/10">
                 <CardHeader>
-                  <CardTitle className="font-display text-lg">Achievement Badges</CardTitle>
+                  <CardTitle className="font-display text-lg">Learning Time & Streak</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="grid grid-cols-4 gap-3">
-                    {[
-                      { icon: Leaf, active: xpPoints >= 100 },
-                      { icon: Leaf, active: currentStreak >= 3 },
-                      { icon: Leaf, active: completedCourses >= 1 },
-                      { icon: Leaf, active: avgProgress >= 50 },
-                    ].map((badge, idx) => (
-                      <div
-                        key={idx}
-                        className={`
-                          aspect-square rounded-full flex items-center justify-center
-                          ${badge.active 
-                            ? 'bg-primary/10 border-2 border-primary' 
-                            : 'bg-muted border-2 border-muted-foreground/20'
-                          }
-                        `}
-                        data-testid={`achievement-badge-${idx}`}
-                      >
-                        <badge.icon className={`h-6 w-6 ${badge.active ? 'text-primary' : 'text-muted-foreground'}`} />
+                  <div className="space-y-4">
+                    {/* Streak display */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-muted-foreground">Current Streak</span>
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-primary" />
+                        <span className="font-bold text-lg">{currentStreak} days</span>
                       </div>
-                    ))}
+                    </div>
+                    
+                    {/* Weekly activity bar chart */}
+                    <div className="space-y-2">
+                      <p className="text-xs text-muted-foreground">Weekly Activity</p>
+                      <div className="flex items-end justify-between gap-1 h-24">
+                        {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((day, idx) => {
+                          // Generate deterministic activity based on current streak
+                          // Show activity for the last N days matching the streak length
+                          const daysSinceStart = 6 - idx; // Sunday is most recent (0), Monday is 6 days ago
+                          const hasActivity = currentStreak > daysSinceStart;
+                          const activity = hasActivity ? 80 + (idx * 2) : 0; // Gradient pattern for active days
+                          
+                          return (
+                            <div key={day} className="flex-1 flex flex-col items-center gap-1">
+                              <div className="w-full bg-muted rounded-sm overflow-hidden flex flex-col justify-end" style={{ height: '80px' }}>
+                                <div 
+                                  className="bg-primary transition-all"
+                                  style={{ height: `${activity}%` }}
+                                />
+                              </div>
+                              <span className="text-xs text-muted-foreground">{day.substring(0, 1)}</span>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
             </div>
+
+            {/* Detailed Achievement Badges */}
+            <Card className="border-primary/10">
+              <CardHeader>
+                <CardTitle className="font-display text-xl">Achievements</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  {[
+                    { 
+                      title: "First Quiz Master", 
+                      description: "Complete first quiz with 100%", 
+                      icon: Trophy, 
+                      isUnlocked: completedCourses >= 1, 
+                      unlockedDate: "2 days ago" 
+                    },
+                    { 
+                      title: "Week Warrior", 
+                      description: "7-day learning streak", 
+                      icon: Zap, 
+                      isUnlocked: currentStreak >= 7, 
+                      unlockedDate: "1 week ago" 
+                    },
+                    { 
+                      title: "Course Completer", 
+                      description: "Finish your first course", 
+                      icon: Award, 
+                      isUnlocked: completedCourses >= 1, 
+                      unlockedDate: "2 weeks ago" 
+                    },
+                    { 
+                      title: "Perfect Score", 
+                      description: "Get 100% on 5 quizzes", 
+                      icon: Star, 
+                      isUnlocked: false 
+                    },
+                    { 
+                      title: "Community Helper", 
+                      description: "Help 10 students in forum", 
+                      icon: Target, 
+                      isUnlocked: false 
+                    },
+                    { 
+                      title: "All-Rounder", 
+                      description: "Complete all course modules", 
+                      icon: TrendingUp, 
+                      isUnlocked: false 
+                    },
+                  ].map((achievement) => (
+                    <div 
+                      key={achievement.title}
+                      className={`p-4 rounded-lg border ${
+                        achievement.isUnlocked 
+                          ? 'border-primary/20 bg-primary/5' 
+                          : 'border-muted-foreground/20 bg-muted/30'
+                      }`}
+                      data-testid={`achievement-${achievement.title.toLowerCase().replace(/\s+/g, '-')}`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`
+                          p-2 rounded-full
+                          ${achievement.isUnlocked 
+                            ? 'bg-primary/20 text-primary' 
+                            : 'bg-muted text-muted-foreground'
+                          }
+                        `}>
+                          <achievement.icon className="h-5 w-5" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-sm truncate">{achievement.title}</h4>
+                          <p className="text-xs text-muted-foreground mt-1">{achievement.description}</p>
+                          {achievement.isUnlocked && achievement.unlockedDate && (
+                            <p className="text-xs text-primary mt-1">Unlocked {achievement.unlockedDate}</p>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Latest Certificate */}
+            <Card className="border-primary/10">
+              <CardHeader>
+                <CardTitle className="font-display text-xl">Latest Certificate</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {completedCourses > 0 ? (
+                  <div className="space-y-4">
+                    {/* Certificate Preview */}
+                    <div className="bg-gradient-to-br from-primary/10 via-primary/5 to-background border-2 border-primary/20 rounded-lg p-8 text-center">
+                      <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-primary/20 flex items-center justify-center">
+                        <Award className="h-8 w-8 text-primary" />
+                      </div>
+                      <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2">Certificate of Completion</p>
+                      <h3 className="font-display font-bold text-2xl mb-4" data-testid="certificate-student-name">
+                        {displayName}
+                      </h3>
+                      <p className="text-sm text-muted-foreground mb-2">Has successfully completed the course</p>
+                      <h4 className="font-display font-bold text-xl text-primary mb-4" data-testid="certificate-course-name">
+                        Unlocking Creativity
+                      </h4>
+                      <p className="text-xs text-muted-foreground">Completed on January 15, 2025</p>
+                      <p className="text-xs text-muted-foreground mt-2">NDUVA Learning Platform</p>
+                    </div>
+                    
+                    {/* Download Button */}
+                    <Button className="w-full gap-2" size="lg" data-testid="button-download-certificate">
+                      <Download className="h-5 w-5" />
+                      Download Certificate
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="text-center py-8 text-muted-foreground">
+                    <Award className="h-12 w-12 mx-auto mb-3 opacity-50" />
+                    <p>No certificates yet</p>
+                    <p className="text-sm mt-1">Complete a course to earn your first certificate!</p>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
 
             {/* Completion Stages - Course Progress */}
             <Card className="border-primary/10">
