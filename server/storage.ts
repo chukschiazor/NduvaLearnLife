@@ -99,14 +99,14 @@ export class DatabaseStorage implements IStorage {
     if (!user) {
       user = await this.upsertUser({
         id: mockUserId,
-        email: "learner@nduva.com",
+        email: "admin@nduva.com",
         firstName: "Demo",
-        lastName: "Learner",
+        lastName: "Admin",
         profileImageUrl: null,
       });
       
-      // Set them as a learner with some progress
-      user = await this.updateUserRole(mockUserId, "learner", "2010-01-15");
+      // Set them as an admin for testing course creation
+      user = await this.updateUserRole(mockUserId, "admin", "1990-01-15");
       
       // Give them some XP and streak
       await db.update(users)
@@ -118,6 +118,9 @@ export class DatabaseStorage implements IStorage {
         .where(eq(users.id, mockUserId));
       
       user = await this.getUser(mockUserId) as User;
+    } else if (user.role !== "admin") {
+      // Force upgrade existing mock user to admin role
+      user = await this.updateUserRole(mockUserId, "admin", user.dateOfBirth || "1990-01-15");
     }
     
     return user;

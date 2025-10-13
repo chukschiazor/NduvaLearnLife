@@ -8,6 +8,8 @@ import LandingPage from "@/pages/LandingPage";
 import Onboarding from "@/pages/Onboarding";
 import Home from "@/pages/Home";
 import Courses from "@/pages/Courses";
+import Classroom from "@/pages/Classroom";
+import Admin from "@/pages/Admin";
 import Leaderboard from "@/pages/Leaderboard";
 import Forum from "@/pages/Forum";
 import Profile from "@/pages/Profile";
@@ -41,6 +43,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/courses" component={Courses} />
+      <Route path="/classroom/:courseId" component={Classroom} />
+      <Route path="/admin" component={Admin} />
       <Route path="/leaderboard" component={Leaderboard} />
       <Route path="/forum" component={Forum} />
       <Route path="/profile" component={Profile} />

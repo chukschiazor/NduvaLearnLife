@@ -4,6 +4,8 @@ import { storage } from "./storage";
 import { setupAuth, isAuthenticated } from "./replitAuth";
 import { 
   insertCourseSchema, 
+  insertModuleSchema,
+  insertCourseSessionSchema,
   insertEnrollmentSchema, 
   insertPostSchema, 
   insertCommentSchema,
@@ -95,6 +97,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating course:", error);
       res.status(500).json({ message: "Failed to create course" });
+    }
+  });
+
+  // ============ Module Routes (Admin/Teacher) ============
+  app.get('/api/courses/:courseId/modules', async (req, res) => {
+    try {
+      const modules = await storage.getModulesByCourse(req.params.courseId);
+      res.json(modules);
+    } catch (error) {
+      console.error("Error fetching modules:", error);
+      res.status(500).json({ message: "Failed to fetch modules" });
+    }
+  });
+
+  app.post('/api/courses/:courseId/modules', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+        return res.status(403).json({ message: "Only teachers/admins can create modules" });
+      }
+
+      const moduleData = insertModuleSchema.parse({
+        ...req.body,
+        courseId: req.params.courseId,
+      });
+
+      const module = await storage.createModule(moduleData);
+      res.status(201).json(module);
+    } catch (error) {
+      console.error("Error creating module:", error);
+      res.status(500).json({ message: "Failed to create module" });
+    }
+  });
+
+  // ============ Course Session Routes (Admin/Teacher) ============
+  app.get('/api/modules/:moduleId/sessions', async (req, res) => {
+    try {
+      const sessions = await storage.getSessionsByModule(req.params.moduleId);
+      res.json(sessions);
+    } catch (error) {
+      console.error("Error fetching sessions:", error);
+      res.status(500).json({ message: "Failed to fetch sessions" });
+    }
+  });
+
+  app.post('/api/modules/:moduleId/sessions', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+        return res.status(403).json({ message: "Only teachers/admins can create sessions" });
+      }
+
+      const sessionData = insertCourseSessionSchema.parse({
+        ...req.body,
+        moduleId: req.params.moduleId,
+      });
+
+      const session = await storage.createCourseSession(sessionData);
+      res.status(201).json(session);
+    } catch (error) {
+      console.error("Error creating session:", error);
+      res.status(500).json({ message: "Failed to create session" });
     }
   });
 
