@@ -3,9 +3,6 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { useAuth } from "@/hooks/useAuth";
-import LandingPage from "@/pages/LandingPage";
-import Onboarding from "@/pages/Onboarding";
 import Home from "@/pages/Home";
 import Courses from "@/pages/Courses";
 import Leaderboard from "@/pages/Leaderboard";
@@ -15,27 +12,7 @@ import LessonView from "@/pages/LessonView";
 import NotFound from "@/pages/not-found";
 
 function Router() {
-  const { isLoading, isAuthenticated, needsOnboarding } = useAuth();
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (!isAuthenticated) {
-    return <LandingPage />;
-  }
-
-  if (needsOnboarding) {
-    return <Onboarding />;
-  }
-
+  // Authentication bypassed - direct access to all pages
   return (
     <Switch>
       <Route path="/" component={Home} />

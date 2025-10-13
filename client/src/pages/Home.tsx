@@ -35,6 +35,11 @@ export default function Home() {
     queryKey: ['/api/courses'],
   });
 
+  // Default values when no user is authenticated
+  const displayName = user?.firstName || 'Learner';
+  const xpPoints = user?.xpPoints || 0;
+  const currentStreak = user?.currentStreak || 0;
+
   const getDifficultyColor = (difficulty: string) => {
     switch (difficulty) {
       case 'beginner':
@@ -71,7 +76,7 @@ export default function Home() {
                 className="font-display font-bold text-3xl md:text-4xl mb-2"
                 data-testid="heading-welcome"
               >
-                Welcome back, {user?.firstName || 'Learner'}!
+                Welcome back, {displayName}!
               </h1>
               <p 
                 className="text-lg text-muted-foreground"
@@ -90,7 +95,7 @@ export default function Home() {
                   <Zap className="h-6 w-6 text-primary" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold" data-testid="stat-xp-points">{user?.xpPoints || 0}</div>
+                  <div className="text-2xl font-bold" data-testid="stat-xp-points">{xpPoints}</div>
                   <div className="text-sm text-muted-foreground">Total XP</div>
                 </div>
               </div>
@@ -102,7 +107,7 @@ export default function Home() {
                   <TrendingUp className="h-6 w-6 text-warning" />
                 </div>
                 <div>
-                  <div className="text-2xl font-bold" data-testid="stat-current-streak">{user?.currentStreak || 0} days</div>
+                  <div className="text-2xl font-bold" data-testid="stat-current-streak">{currentStreak} days</div>
                   <div className="text-sm text-muted-foreground">Current Streak</div>
                 </div>
               </div>
