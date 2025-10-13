@@ -116,6 +116,13 @@ Preferred communication style: Simple, everyday language.
 - The `/api/callback` route has `failureRedirect: "/api/login"` which gracefully handles failed login attempts
 - Successful logins complete without issues, as confirmed by e2e testing
 
+**Development Mode (Authentication Bypassed - October 13, 2025):**
+- Authentication gates removed from App.tsx Router for direct page access during development
+- All pages (/admin, /classroom, /courses, etc.) are directly accessible without login
+- useAuth hook still fetches mock user for API calls but doesn't enforce redirects
+- Backend continues using mock user (admin@nduva.com) for all API endpoints
+- **NOTE**: This is temporary for development - restore auth gating before production
+
 **User Schema (Merged Replit Auth + Platform Fields):**
 - OAuth fields: id (sub), email, firstName, lastName, profileImageUrl
 - Platform fields: role (learner/teacher/admin), dateOfBirth, xpPoints, currentStreak, fullName
