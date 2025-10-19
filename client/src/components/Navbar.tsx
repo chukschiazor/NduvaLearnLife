@@ -18,9 +18,11 @@ export default function Navbar() {
     { path: "/profile", label: "Profile", icon: User },
   ];
 
-  // Add "My Courses" for teachers/admins (course management)
-  if (user?.role === "teacher" || user?.role === "admin") {
-    navItems.splice(1, 0, { path: "/my-courses", label: "My Courses", icon: Settings });
+  // Add role-specific learning/teaching link
+  if (user?.role === "learner") {
+    navItems.splice(1, 0, { path: "/my-learning", label: "My Learning", icon: BookOpen });
+  } else if (user?.role === "teacher" || user?.role === "admin") {
+    navItems.splice(1, 0, { path: "/my-courses", label: "My Courses", icon: BookOpen });
   }
 
   return (

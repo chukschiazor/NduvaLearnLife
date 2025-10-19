@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import CourseCard from "@/components/CourseCard";
 import StatsCard from "@/components/StatsCard";
 import { BookOpen, Target, TrendingUp, Flame, Sparkles, GraduationCap } from "lucide-react";
@@ -90,7 +91,7 @@ export default function Courses() {
   // New user view - Explore Courses
   if (isNewUser) {
     return (
-      <div className="min-h-screen bg-background">
+      <div className="min-h-screen bg-background flex flex-col">
         <Navbar />
 
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -111,13 +112,15 @@ export default function Courses() {
             ))}
           </div>
         </div>
+
+        <Footer />
       </div>
     );
   }
 
   // Existing user view - My Learning Dashboard
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -137,12 +140,14 @@ export default function Courses() {
           <p className="text-muted-foreground">Continue where you left off</p>
         </div>
 
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
           {courses.map((course) => (
             <CourseCard key={course.id} {...course} />
           ))}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { useAuth } from "@/hooks/useAuth";
+import RoleGuard from "@/components/RoleGuard";
 import LandingPage from "@/pages/LandingPage";
 import Home from "@/pages/Home";
 import Onboarding from "@/pages/Onboarding";
@@ -14,6 +15,7 @@ import TeacherLanding from "@/pages/TeacherLanding";
 import TeacherApplication from "@/pages/TeacherApplication";
 import TeacherApplicationSuccess from "@/pages/TeacherApplicationSuccess";
 import MyCourses from "@/pages/MyCourses";
+import MyLearning from "@/pages/MyLearning";
 import CourseBuilder from "@/pages/CourseBuilder";
 import Leaderboard from "@/pages/Leaderboard";
 import Forum from "@/pages/Forum";
@@ -53,8 +55,21 @@ function Router() {
       <Route path="/teach" component={TeacherLanding} />
       <Route path="/teach/apply" component={TeacherApplication} />
       <Route path="/teach/success" component={TeacherApplicationSuccess} />
-      <Route path="/my-courses" component={MyCourses} />
-      <Route path="/course-builder/:courseId" component={CourseBuilder} />
+      <Route path="/my-courses">
+        <RoleGuard allowedRoles={["teacher", "admin"]}>
+          <MyCourses />
+        </RoleGuard>
+      </Route>
+      <Route path="/my-learning">
+        <RoleGuard allowedRoles={["learner"]}>
+          <MyLearning />
+        </RoleGuard>
+      </Route>
+      <Route path="/course-builder/:courseId">
+        <RoleGuard allowedRoles={["teacher", "admin"]}>
+          <CourseBuilder />
+        </RoleGuard>
+      </Route>
       <Route path="/courses" component={Courses} />
       <Route path="/classroom/:courseId" component={Classroom} />
       <Route path="/admin" component={Admin} />
