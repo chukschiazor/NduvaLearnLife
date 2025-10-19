@@ -52,17 +52,20 @@ export interface IStorage {
   createCourse(course: InsertCourse): Promise<Course>;
   getCourse(id: string): Promise<Course | undefined>;
   getCourses(filters?: { ageGroup?: string; difficulty?: string; status?: string }): Promise<Course[]>;
+  getCoursesByTeacher(teacherId: string): Promise<Course[]>;
   updateCourse(id: string, course: Partial<InsertCourse>): Promise<Course>;
   
   // Module operations (Coursera-style)
   createModule(module: InsertModule): Promise<Module>;
   getModulesByCourse(courseId: string): Promise<Module[]>;
   getModule(id: string): Promise<Module | undefined>;
+  deleteModule(id: string): Promise<void>;
   
   // Course Session operations
   createCourseSession(session: InsertCourseSession): Promise<CourseSession>;
   getSessionsByModule(moduleId: string): Promise<CourseSession[]>;
   getCourseSession(id: string): Promise<CourseSession | undefined>;
+  deleteCourseSession(id: string): Promise<void>;
   
   // Lesson operations (legacy)
   createLesson(lesson: InsertLesson): Promise<Lesson>;
@@ -215,6 +218,10 @@ export class DatabaseStorage implements IStorage {
     return db.select().from(courses);
   }
 
+  async getCoursesByTeacher(teacherId: string): Promise<Course[]> {
+    return db.select().from(courses).where(eq(courses.createdByTeacherId, teacherId)).orderBy(courses.createdAt);
+  }
+
   async updateCourse(id: string, courseData: Partial<InsertCourse>): Promise<Course> {
     const [course] = await db
       .update(courses)
@@ -252,6 +259,17 @@ export class DatabaseStorage implements IStorage {
   async getCourseSession(id: string): Promise<CourseSession | undefined> {
     const [session] = await db.select().from(courseSessions).where(eq(courseSessions.id, id));
     return session;
+  }
+
+  async deleteModule(id: string): Promise<void> {
+    // First delete all sessions in this module
+    await db.delete(courseSessions).where(eq(courseSessions.moduleId, id));
+    // Then delete the module
+    await db.delete(modules).where(eq(modules.id, id));
+  }
+
+  async deleteCourseSession(id: string): Promise<void> {
+    await db.delete(courseSessions).where(eq(courseSessions.id, id));
   }
 
   // Lesson operations (legacy)

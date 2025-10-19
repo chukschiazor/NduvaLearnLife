@@ -13,6 +13,8 @@ import Admin from "@/pages/Admin";
 import TeacherLanding from "@/pages/TeacherLanding";
 import TeacherApplication from "@/pages/TeacherApplication";
 import TeacherApplicationSuccess from "@/pages/TeacherApplicationSuccess";
+import MyCourses from "@/pages/MyCourses";
+import CourseBuilder from "@/pages/CourseBuilder";
 import Leaderboard from "@/pages/Leaderboard";
 import Forum from "@/pages/Forum";
 import Profile from "@/pages/Profile";
@@ -51,6 +53,8 @@ function Router() {
       <Route path="/teach" component={TeacherLanding} />
       <Route path="/teach/apply" component={TeacherApplication} />
       <Route path="/teach/success" component={TeacherApplicationSuccess} />
+      <Route path="/my-courses" component={MyCourses} />
+      <Route path="/course-builder/:courseId" component={CourseBuilder} />
       <Route path="/courses" component={Courses} />
       <Route path="/classroom/:courseId" component={Classroom} />
       <Route path="/admin" component={Admin} />

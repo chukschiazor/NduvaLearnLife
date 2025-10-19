@@ -11,19 +11,16 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, isLoading } = useAuth();
 
-  // Show Admin link only for admin/teacher roles
-  const isAdminOrTeacher = user?.role === "admin" || user?.role === "teacher";
-
   const navItems = [
-    { path: "/courses", label: "My Courses", icon: BookOpen },
+    { path: "/courses", label: "Explore", icon: BookOpen },
     { path: "/leaderboard", label: "Leaderboard", icon: Trophy },
     { path: "/forum", label: "Forum", icon: MessageSquare },
     { path: "/profile", label: "Profile", icon: User },
   ];
 
-  // Add Admin link for admin/teacher users
-  if (isAdminOrTeacher) {
-    navItems.push({ path: "/admin", label: "Admin", icon: Settings });
+  // Add "My Courses" for teachers/admins (course management)
+  if (user?.role === "teacher" || user?.role === "admin") {
+    navItems.splice(1, 0, { path: "/my-courses", label: "My Courses", icon: Settings });
   }
 
   return (

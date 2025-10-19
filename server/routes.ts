@@ -65,6 +65,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get teacher's own courses (including drafts)
+  app.get('/api/teacher/courses', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+        return res.status(403).json({ message: "Only teachers can access this endpoint" });
+      }
+
+      const courses = await storage.getCoursesByTeacher(user.id);
+      res.json(courses);
+    } catch (error) {
+      console.error("Error fetching teacher courses:", error);
+      res.status(500).json({ message: "Failed to fetch teacher courses" });
+    }
+  });
+
   app.get('/api/courses/:id', async (req, res) => {
     try {
       const course = await storage.getCourse(req.params.id);
@@ -162,6 +179,54 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating session:", error);
       res.status(500).json({ message: "Failed to create session" });
+    }
+  });
+
+  // Get all sessions for a course (for course builder)
+  app.get('/api/courses/:courseId/all-sessions', async (req, res) => {
+    try {
+      const modules = await storage.getModulesByCourse(req.params.courseId);
+      const sessionPromises = modules.map(module => storage.getSessionsByModule(module.id));
+      const sessionsArrays = await Promise.all(sessionPromises);
+      const allSessions = sessionsArrays.flat();
+      res.json(allSessions);
+    } catch (error) {
+      console.error("Error fetching all sessions:", error);
+      res.status(500).json({ message: "Failed to fetch sessions" });
+    }
+  });
+
+  // Delete module
+  app.delete('/api/modules/:moduleId', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+        return res.status(403).json({ message: "Only teachers/admins can delete modules" });
+      }
+
+      await storage.deleteModule(req.params.moduleId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting module:", error);
+      res.status(500).json({ message: "Failed to delete module" });
+    }
+  });
+
+  // Delete session
+  app.delete('/api/sessions/:sessionId', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+        return res.status(403).json({ message: "Only teachers/admins can delete sessions" });
+      }
+
+      await storage.deleteCourseSession(req.params.sessionId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting session:", error);
+      res.status(500).json({ message: "Failed to delete session" });
     }
   });
 

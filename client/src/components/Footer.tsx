@@ -21,26 +21,26 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link href="/courses" data-testid="footer-link-courses">
-                  <a className="hover:text-foreground transition-colors flex items-center gap-2">
+                  <span className="hover:text-foreground transition-colors flex items-center gap-2 cursor-pointer">
                     <BookOpen className="h-4 w-4" />
                     Browse Courses
-                  </a>
+                  </span>
                 </Link>
               </li>
               <li>
                 <Link href="/leaderboard" data-testid="footer-link-leaderboard">
-                  <a className="hover:text-foreground transition-colors flex items-center gap-2">
+                  <span className="hover:text-foreground transition-colors flex items-center gap-2 cursor-pointer">
                     <Award className="h-4 w-4" />
                     Leaderboard
-                  </a>
+                  </span>
                 </Link>
               </li>
               <li>
                 <Link href="/forum" data-testid="footer-link-forum">
-                  <a className="hover:text-foreground transition-colors flex items-center gap-2">
+                  <span className="hover:text-foreground transition-colors flex items-center gap-2 cursor-pointer">
                     <MessageSquare className="h-4 w-4" />
                     Community
-                  </a>
+                  </span>
                 </Link>
               </li>
             </ul>
@@ -51,20 +51,20 @@ export default function Footer() {
             <ul className="space-y-2 text-sm text-muted-foreground">
               <li>
                 <Link href="/teach" data-testid="footer-link-teach">
-                  <a className="hover:text-foreground transition-colors flex items-center gap-2 font-medium text-primary">
+                  <span className="hover:text-foreground transition-colors flex items-center gap-2 font-medium text-primary cursor-pointer">
                     <GraduationCap className="h-4 w-4" />
                     Teach on NDUVA
-                  </a>
+                  </span>
                 </Link>
               </li>
               <li>
                 <Link href="/teach#benefits" data-testid="footer-link-benefits">
-                  <a className="hover:text-foreground transition-colors">Why Teach</a>
+                  <span className="hover:text-foreground transition-colors cursor-pointer">Why Teach</span>
                 </Link>
               </li>
               <li>
                 <Link href="/teach#process" data-testid="footer-link-process">
-                  <a className="hover:text-foreground transition-colors">How It Works</a>
+                  <span className="hover:text-foreground transition-colors cursor-pointer">How It Works</span>
                 </Link>
               </li>
             </ul>
