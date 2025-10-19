@@ -17,6 +17,7 @@ import TeacherApplicationSuccess from "@/pages/TeacherApplicationSuccess";
 import MyCourses from "@/pages/MyCourses";
 import MyLearning from "@/pages/MyLearning";
 import CourseBuilder from "@/pages/CourseBuilder";
+import CourseAnalytics from "@/pages/CourseAnalytics";
 import Leaderboard from "@/pages/Leaderboard";
 import Forum from "@/pages/Forum";
 import Profile from "@/pages/Profile";
@@ -68,6 +69,11 @@ function Router() {
       <Route path="/course-builder/:courseId">
         <RoleGuard allowedRoles={["teacher", "admin"]}>
           <CourseBuilder />
+        </RoleGuard>
+      </Route>
+      <Route path="/analytics/:courseId">
+        <RoleGuard allowedRoles={["teacher", "admin"]}>
+          <CourseAnalytics />
         </RoleGuard>
       </Route>
       <Route path="/courses" component={Courses} />

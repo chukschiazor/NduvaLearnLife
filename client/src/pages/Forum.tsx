@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import DiscussionThread from "@/components/DiscussionThread";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -59,10 +60,10 @@ export default function Forum() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="mb-8">
           <h1 className="font-display font-bold text-3xl md:text-4xl mb-2">Community Forum</h1>
           <p className="text-muted-foreground">Connect with fellow learners and share your journey</p>
@@ -89,6 +90,8 @@ export default function Forum() {
           ))}
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

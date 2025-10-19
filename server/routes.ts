@@ -96,6 +96,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Get course analytics (teacher/admin only)
+  app.get('/api/courses/:id/analytics', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+        return res.status(403).json({ message: "Only teachers/admins can access analytics" });
+      }
+
+      const course = await storage.getCourse(req.params.id);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Verify the course belongs to the teacher (unless admin)
+      if (user.role === 'teacher' && course.createdByTeacherId !== user.id) {
+        return res.status(403).json({ message: "You can only view analytics for your own courses" });
+      }
+
+      const analytics = await storage.getCourseAnalytics(req.params.id);
+      res.json(analytics);
+    } catch (error) {
+      console.error("Error fetching course analytics:", error);
+      res.status(500).json({ message: "Failed to fetch analytics" });
+    }
+  });
+
   app.post('/api/courses', async (req: any, res) => {
     try {
       // TEMPORARY: Use mock user for development

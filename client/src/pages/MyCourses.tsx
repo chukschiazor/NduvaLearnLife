@@ -1,7 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Plus, Edit, Users, BookOpen } from "lucide-react";
+import { Plus, Edit, Users, BookOpen, BarChart3 } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Link } from "wouter";
@@ -84,11 +84,17 @@ export default function MyCourses() {
                       </span>
                     </div>
                   </CardContent>
-                  <CardFooter>
-                    <Link href={`/course-builder/${course.id}`} data-testid={`link-edit-course-${index}`}>
-                      <Button className="w-full gap-2">
+                  <CardFooter className="flex gap-2">
+                    <Link href={`/course-builder/${course.id}`} data-testid={`link-edit-course-${index}`} className="flex-1">
+                      <Button className="w-full gap-2" variant="outline">
                         <Edit className="h-4 w-4" />
-                        Edit Curriculum
+                        Edit
+                      </Button>
+                    </Link>
+                    <Link href={`/analytics/${course.id}`} data-testid={`link-analytics-${index}`} className="flex-1">
+                      <Button className="w-full gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        Analytics
                       </Button>
                     </Link>
                   </CardFooter>

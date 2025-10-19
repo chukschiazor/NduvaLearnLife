@@ -92,6 +92,14 @@ export interface IStorage {
   
   // Teacher Applications
   createTeacherApplication(userId: string, applicationData: Omit<InsertTeacherApplication, 'userId'>): Promise<TeacherApplication>;
+  
+  // Course Analytics
+  getCourseAnalytics(courseId: string): Promise<{
+    totalEnrollments: number;
+    activeEnrollments: number;
+    completedEnrollments: number;
+    averageProgress: number;
+  }>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -413,6 +421,35 @@ export class DatabaseStorage implements IStorage {
       .where(eq(users.id, userId));
     
     return application;
+  }
+
+  // Course Analytics
+  async getCourseAnalytics(courseId: string): Promise<{
+    totalEnrollments: number;
+    activeEnrollments: number;
+    completedEnrollments: number;
+    averageProgress: number;
+  }> {
+    // Get all enrollments for this course
+    const courseEnrollments = await db
+      .select()
+      .from(enrollments)
+      .where(eq(enrollments.courseId, courseId));
+
+    const totalEnrollments = courseEnrollments.length;
+    const activeEnrollments = courseEnrollments.filter(e => e.status === 'active').length;
+    const completedEnrollments = courseEnrollments.filter(e => e.status === 'completed').length;
+    
+    // Calculate average progress
+    const totalProgress = courseEnrollments.reduce((sum, e) => sum + e.progressPercentage, 0);
+    const averageProgress = totalEnrollments > 0 ? Math.round(totalProgress / totalEnrollments) : 0;
+
+    return {
+      totalEnrollments,
+      activeEnrollments,
+      completedEnrollments,
+      averageProgress,
+    };
   }
 }
 

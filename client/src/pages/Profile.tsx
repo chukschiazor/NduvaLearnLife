@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import HexagonalAvatar from "@/components/HexagonalAvatar";
 import CircularBadge from "@/components/CircularBadge";
 import { Nova } from "@/components/Nova";
@@ -56,10 +57,10 @@ export default function Profile() {
     : 0;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-accent/5 flex flex-col">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="grid lg:grid-cols-[320px,1fr] gap-8">
           {/* Left Sidebar */}
           <div className="space-y-6">
@@ -424,6 +425,8 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 }

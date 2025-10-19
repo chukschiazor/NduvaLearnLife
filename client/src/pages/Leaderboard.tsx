@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import LeaderboardTable from "@/components/LeaderboardTable";
 import { Card, CardContent } from "@/components/ui/card";
 import { Trophy, Award, Target } from "lucide-react";
@@ -16,10 +17,10 @@ export default function Leaderboard() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="flex-1 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 w-full">
         <div className="mb-8">
           <h1 className="font-display font-bold text-3xl md:text-4xl mb-2">Leaderboard</h1>
           <p className="text-muted-foreground">See how you rank among other learners</p>
@@ -74,6 +75,8 @@ export default function Leaderboard() {
 
         <LeaderboardTable entries={leaderboardEntries} />
       </div>
+
+      <Footer />
     </div>
   );
 }
