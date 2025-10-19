@@ -9,7 +9,8 @@ import {
   insertEnrollmentSchema, 
   insertPostSchema, 
   insertCommentSchema,
-  completeProfileSchema 
+  completeProfileSchema,
+  insertTeacherApplicationSchema 
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -273,6 +274,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error creating comment:", error);
       res.status(500).json({ message: "Failed to create comment" });
+    }
+  });
+
+  // ============ Teacher Application Routes ============
+  app.post('/api/teacher-applications', async (req: any, res) => {
+    try {
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
+      
+      // Validate request body
+      const applicationData = insertTeacherApplicationSchema.parse(req.body);
+      
+      // Create the application
+      const application = await storage.createTeacherApplication(user.id, applicationData);
+      
+      res.status(201).json(application);
+    } catch (error: any) {
+      console.error("Error creating teacher application:", error);
+      if (error.name === 'ZodError') {
+        return res.status(400).json({ message: "Invalid data", errors: error.errors });
+      }
+      res.status(500).json({ message: "Failed to create teacher application" });
     }
   });
 

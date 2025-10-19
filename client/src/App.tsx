@@ -11,6 +11,8 @@ import Courses from "@/pages/Courses";
 import Classroom from "@/pages/Classroom";
 import Admin from "@/pages/Admin";
 import TeacherLanding from "@/pages/TeacherLanding";
+import TeacherApplication from "@/pages/TeacherApplication";
+import TeacherApplicationSuccess from "@/pages/TeacherApplicationSuccess";
 import Leaderboard from "@/pages/Leaderboard";
 import Forum from "@/pages/Forum";
 import Profile from "@/pages/Profile";
@@ -47,6 +49,8 @@ function Router() {
       <Route path="/" component={Home} />
       <Route path="/onboarding" component={Onboarding} />
       <Route path="/teach" component={TeacherLanding} />
+      <Route path="/teach/apply" component={TeacherApplication} />
+      <Route path="/teach/success" component={TeacherApplicationSuccess} />
       <Route path="/courses" component={Courses} />
       <Route path="/classroom/:courseId" component={Classroom} />
       <Route path="/admin" component={Admin} />

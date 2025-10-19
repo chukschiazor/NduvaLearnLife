@@ -15,6 +15,7 @@ import {
   certificates,
   posts,
   comments,
+  teacherApplications,
   type User,
   type UpsertUser,
   type Course,
@@ -33,6 +34,8 @@ import {
   type Comment,
   type InsertComment,
   type Badge,
+  type TeacherApplication,
+  type InsertTeacherApplication,
 } from "@shared/schema";
 import { db } from "./db";
 import { eq, and, desc, sql } from "drizzle-orm";
@@ -83,6 +86,9 @@ export interface IStorage {
   createPost(post: InsertPost): Promise<Post>;
   getPosts(courseId?: string): Promise<Post[]>;
   createComment(comment: InsertComment): Promise<Comment>;
+  
+  // Teacher Applications
+  createTeacherApplication(userId: string, applicationData: Omit<InsertTeacherApplication, 'userId'>): Promise<TeacherApplication>;
 }
 
 export class DatabaseStorage implements IStorage {
@@ -365,6 +371,30 @@ export class DatabaseStorage implements IStorage {
     `);
     
     return newComment;
+  }
+
+  // Teacher Applications
+  async createTeacherApplication(userId: string, applicationData: Omit<InsertTeacherApplication, 'userId'>): Promise<TeacherApplication> {
+    // Insert the application
+    const [application] = await db.insert(teacherApplications).values({
+      ...applicationData,
+      userId,
+    }).returning();
+    
+    // Update user's teacher profile fields
+    await db.update(users)
+      .set({
+        bio: applicationData.bio,
+        expertiseAreas: applicationData.expertiseAreas,
+        websiteUrl: applicationData.websiteUrl,
+        linkedinUrl: applicationData.linkedinUrl,
+        twitterUrl: applicationData.twitterUrl,
+        teachingExperience: applicationData.teachingExperience,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+    
+    return application;
   }
 }
 
