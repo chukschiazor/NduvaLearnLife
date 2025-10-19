@@ -67,7 +67,12 @@ Preferred communication style: Simple, everyday language.
   - **My Courses** (teacher/admin-only): Course management, creation, and editing interface
   - **RoleGuard**: Client-side route protection with automatic redirects
   - **Navbar**: Dynamic links based on user role (learners see "My Learning", teachers see "My Courses")
-  - **Footer**: Appears on Explore (/courses) page with "Teach on NDUVA" link
+  - **Footer**: Universal footer on all main pages (My Learning, My Courses, Leaderboard, Forum, Profile, Classroom, Analytics) with "Teach on NDUVA" link (✓ October 19, 2025)
+- **Course Analytics**: Teacher/admin dashboard for course performance tracking (✓ October 19, 2025)
+  - **Metrics**: Total enrollments, active students, completion rate, average progress
+  - **Access Control**: Only course owners and admins can view analytics
+  - **Backend**: GET `/api/courses/:id/analytics` endpoint with enrollment aggregations
+  - **Navigation**: Accessible from My Courses via "Analytics" button on each course card
 - **Development**: HMR via Vite, TypeScript type safety throughout
 
 ### Data Architecture
