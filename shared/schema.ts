@@ -31,6 +31,7 @@ export const flagReasonEnum = pgEnum("flag_reason", ["spam", "inappropriate", "h
 export const flagStatusEnum = pgEnum("flag_status", ["pending", "reviewed", "actioned", "dismissed"]);
 export const eventCategoryEnum = pgEnum("event_category", ["engagement", "learning", "social", "system"]);
 export const consentTypeEnum = pgEnum("consent_type", ["data_collection", "marketing"]);
+export const applicationStatusEnum = pgEnum("application_status", ["pending", "approved", "rejected"]);
 
 // Session storage table (required by Replit Auth)
 export const sessions = pgTable(
@@ -61,10 +62,36 @@ export const users = pgTable("users", {
   currentStreak: integer("current_streak").notNull().default(0),
   lastActiveDate: date("last_active_date"),
   preferences: jsonb("preferences").default({}).notNull(),
+  // Teacher profile fields
+  bio: text("bio"),
+  expertiseAreas: jsonb("expertise_areas").default([]),
+  websiteUrl: text("website_url"),
+  linkedinUrl: text("linkedin_url"),
+  twitterUrl: text("twitter_url"),
+  teachingExperience: text("teaching_experience"),
+  // System fields
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
   isActive: boolean("is_active").notNull().default(true),
   parentId: varchar("parent_id"),
+});
+
+// Teacher applications
+export const teacherApplications = pgTable("teacher_applications", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  expertiseAreas: jsonb("expertise_areas").notNull().default([]),
+  teachingExperience: text("teaching_experience").notNull(),
+  courseIdeas: text("course_ideas").notNull(),
+  bio: text("bio").notNull(),
+  websiteUrl: text("website_url"),
+  linkedinUrl: text("linkedin_url"),
+  twitterUrl: text("twitter_url"),
+  status: applicationStatusEnum("status").notNull().default("pending"),
+  reviewedAt: timestamp("reviewed_at"),
+  reviewNotes: text("review_notes"),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
 // Parental consents
@@ -352,6 +379,16 @@ export const completeProfileSchema = z.object({
   }).optional(),
 });
 
+export const insertTeacherApplicationSchema = createInsertSchema(teacherApplications, {
+  expertiseAreas: z.array(z.string()).min(1, "Select at least one area of expertise"),
+  teachingExperience: z.string().min(50, "Please provide at least 50 characters about your teaching experience"),
+  courseIdeas: z.string().min(50, "Please provide at least 50 characters about your course ideas"),
+  bio: z.string().min(100, "Please provide at least 100 characters for your bio"),
+  websiteUrl: z.string().url().optional().or(z.literal("")),
+  linkedinUrl: z.string().url().optional().or(z.literal("")),
+  twitterUrl: z.string().url().optional().or(z.literal("")),
+}).omit({ id: true, createdAt: true, updatedAt: true, status: true, reviewedAt: true, reviewNotes: true });
+
 export const insertCourseSchema = createInsertSchema(courses, {
   title: z.string().min(3).max(200),
   description: z.string().max(5000),
@@ -374,6 +411,8 @@ export const insertBadgeSchema = createInsertSchema(badges).omit({ id: true, cre
 export type InsertUser = z.infer<typeof insertUserSchema>;
 export type UpsertUser = z.infer<typeof upsertUserSchema>;
 export type User = typeof users.$inferSelect;
+export type TeacherApplication = typeof teacherApplications.$inferSelect;
+export type InsertTeacherApplication = z.infer<typeof insertTeacherApplicationSchema>;
 export type Course = typeof courses.$inferSelect;
 export type InsertCourse = z.infer<typeof insertCourseSchema>;
 export type Module = typeof modules.$inferSelect;
