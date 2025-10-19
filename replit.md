@@ -124,6 +124,15 @@ Preferred communication style: Simple, everyday language.
 - **Admin Access**: Admin/teacher users see "Admin" link in navigation bar
 - Mock user (admin@nduva.com) is auto-upgraded to admin role for development testing
 
+**Development Mode (✓ October 19, 2025):**
+- OAuth completely bypassed when `NODE_ENV=development`
+- No consent redirects or authentication popups during development
+- Mock user automatically authenticated: { id: 'mock-user-123', email: 'admin@nduva.com', role: 'admin' }
+- All protected routes accessible without OAuth flow
+- Simple express-session used instead of passport/OIDC
+- Production OAuth flow unaffected (requires `NODE_ENV=production`)
+- **Note**: Never set `NODE_ENV=development` in production environments
+
 **User Schema (Merged Replit Auth + Platform Fields):**
 - OAuth fields: id (sub), email, firstName, lastName, profileImageUrl
 - Platform fields: role (learner/teacher/admin), dateOfBirth, xpPoints, currentStreak, fullName
