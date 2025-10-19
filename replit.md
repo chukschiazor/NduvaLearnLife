@@ -62,6 +62,12 @@ Preferred communication style: Simple, everyday language.
 - **Onboarding**: Multi-step learner onboarding with AI personalization data collection (✓ October 13, 2025)
 - **Admin Dashboard**: Course management with Coursera-style modules and sessions (✓ October 13, 2025)
 - **Classroom**: Video player with module/session navigation and progress tracking (✓ October 13, 2025)
+- **Role-Based UI Separation**: Distinct learner and teacher pathways (✓ October 19, 2025)
+  - **My Learning** (learner-only): Personal dashboard with enrolled courses, recommendations, progress tracking
+  - **My Courses** (teacher/admin-only): Course management, creation, and editing interface
+  - **RoleGuard**: Client-side route protection with automatic redirects
+  - **Navbar**: Dynamic links based on user role (learners see "My Learning", teachers see "My Courses")
+  - **Footer**: Appears on Explore (/courses) page with "Teach on NDUVA" link
 - **Development**: HMR via Vite, TypeScript type safety throughout
 
 ### Data Architecture
