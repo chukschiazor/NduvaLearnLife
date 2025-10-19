@@ -8,7 +8,10 @@ import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
 import { storage } from "./storage";
 
-if (!process.env.REPLIT_DOMAINS) {
+// DEV MODE: Skip OAuth for development
+const DEV_BYPASS_AUTH = process.env.NODE_ENV === 'development';
+
+if (!DEV_BYPASS_AUTH && !process.env.REPLIT_DOMAINS) {
   throw new Error("Environment variable REPLIT_DOMAINS not provided");
 }
 
@@ -65,6 +68,36 @@ async function upsertUser(claims: any) {
 }
 
 export async function setupAuth(app: Express) {
+  if (DEV_BYPASS_AUTH) {
+    console.log("[AUTH] 🚧 DEV MODE: OAuth bypassed - using mock authentication");
+    
+    // Simple session for dev mode
+    app.use(session({
+      secret: 'dev-secret-key',
+      resave: false,
+      saveUninitialized: true,
+      cookie: { secure: false }
+    }));
+    
+    // Dev mode login - just set mock user in session
+    app.get("/api/login", (req, res) => {
+      console.log("[AUTH] Dev login - redirecting to home");
+      res.redirect("/");
+    });
+    
+    app.get("/api/callback", (req, res) => {
+      res.redirect("/");
+    });
+    
+    app.get("/api/logout", (req, res) => {
+      console.log("[AUTH] Dev logout");
+      res.redirect("/");
+    });
+    
+    return;
+  }
+
+  // PRODUCTION MODE: Full OAuth setup
   app.set("trust proxy", 1);
   app.use(getSession());
   app.use(passport.initialize());
@@ -135,6 +168,12 @@ export async function setupAuth(app: Express) {
 }
 
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
+  // DEV MODE: Always allow requests
+  if (DEV_BYPASS_AUTH) {
+    return next();
+  }
+
+  // PRODUCTION MODE: Check OAuth authentication
   const user = req.user as any;
 
   if (!req.isAuthenticated() || !user.expires_at) {
