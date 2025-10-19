@@ -1,4 +1,5 @@
 import Navbar from "@/components/Navbar";
+import Footer from "@/components/Footer";
 import HeroSection from "@/components/HeroSection";
 import CourseCard from "@/components/CourseCard";
 import { Button } from "@/components/ui/button";
@@ -57,7 +58,7 @@ export default function Home() {
   ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       <HeroSection />
 
@@ -104,6 +105,8 @@ export default function Home() {
           </div>
         </div>
       </section>
+
+      <Footer />
     </div>
   );
 }
