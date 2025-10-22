@@ -1,29 +1,10 @@
-import * as client from "openid-client";
-import { Strategy, type VerifyFunction } from "openid-client/passport";
-
-import passport from "passport";
 import session from "express-session";
 import type { Express, RequestHandler } from "express";
-import memoize from "memoizee";
 import connectPg from "connect-pg-simple";
-import { storage } from "./storage";
 
-// DEV MODE: Skip OAuth for development
-const DEV_BYPASS_AUTH = process.env.NODE_ENV === 'development';
-
-if (!DEV_BYPASS_AUTH && !process.env.REPLIT_DOMAINS) {
-  throw new Error("Environment variable REPLIT_DOMAINS not provided");
-}
-
-const getOidcConfig = memoize(
-  async () => {
-    return await client.discovery(
-      new URL(process.env.ISSUER_URL ?? "https://replit.com/oidc"),
-      process.env.REPL_ID!
-    );
-  },
-  { maxAge: 3600 * 1000 }
-);
+// Universal auto-login: Everyone is automatically authenticated as mock admin
+// No OAuth, no popups, works on any URL
+console.log("[AUTH] 🔓 Universal auto-login enabled - all users authenticated as mock admin");
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week
@@ -35,169 +16,46 @@ export function getSession() {
     tableName: "sessions",
   });
   return session({
-    secret: process.env.SESSION_SECRET!,
+    secret: process.env.SESSION_SECRET || 'dev-secret-key',
     store: sessionStore,
     resave: false,
     saveUninitialized: false,
     cookie: {
       httpOnly: true,
-      secure: true,
+      secure: false, // Allow both HTTP and HTTPS
       maxAge: sessionTtl,
     },
   });
 }
 
-function updateUserSession(
-  user: any,
-  tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers
-) {
-  user.claims = tokens.claims();
-  user.access_token = tokens.access_token;
-  user.refresh_token = tokens.refresh_token;
-  user.expires_at = user.claims?.exp;
-}
-
-async function upsertUser(claims: any) {
-  await storage.upsertUser({
-    id: claims["sub"],
-    email: claims["email"],
-    firstName: claims["first_name"],
-    lastName: claims["last_name"],
-    profileImageUrl: claims["profile_image_url"],
-  });
-}
-
 export async function setupAuth(app: Express) {
-  if (DEV_BYPASS_AUTH) {
-    console.log("[AUTH] 🚧 DEV MODE: OAuth bypassed - using mock authentication");
-    
-    // Simple session for dev mode
-    app.use(session({
-      secret: 'dev-secret-key',
-      resave: false,
-      saveUninitialized: true,
-      cookie: { secure: false }
-    }));
-    
-    // Dev mode login - just set mock user in session
-    app.get("/api/login", (req, res) => {
-      console.log("[AUTH] Dev login - redirecting to home");
-      res.redirect("/");
-    });
-    
-    app.get("/api/callback", (req, res) => {
-      res.redirect("/");
-    });
-    
-    app.get("/api/logout", (req, res) => {
-      console.log("[AUTH] Dev logout");
-      res.redirect("/");
-    });
-    
-    return;
-  }
-
-  // PRODUCTION MODE: Full OAuth setup
-  app.set("trust proxy", 1);
-  app.use(getSession());
-  app.use(passport.initialize());
-  app.use(passport.session());
-
-  const config = await getOidcConfig();
-
-  const verify: VerifyFunction = async (
-    tokens: client.TokenEndpointResponse & client.TokenEndpointResponseHelpers,
-    verified: passport.AuthenticateCallback
-  ) => {
-    const user = {};
-    updateUserSession(user, tokens);
-    await upsertUser(tokens.claims());
-    verified(null, user);
-  };
-
-  const domains = process.env.REPLIT_DOMAINS!.split(",");
-  console.log("[AUTH] Registering OAuth strategies for domains:", domains);
+  console.log("[AUTH] Setting up universal auto-login (no OAuth required)");
   
-  for (const domain of domains) {
-    const strategy = new Strategy(
-      {
-        name: `replitauth:${domain}`,
-        config,
-        scope: "openid email profile offline_access",
-        callbackURL: `https://${domain}/api/callback`,
-      },
-      verify
-    );
-    passport.use(strategy);
-    console.log(`[AUTH] Registered strategy: replitauth:${domain}`);
-  }
-
-  passport.serializeUser((user: Express.User, cb) => cb(null, user));
-  passport.deserializeUser((user: Express.User, cb) => cb(null, user));
-
-  app.get("/api/login", (req, res, next) => {
-    const strategyName = `replitauth:${req.hostname}`;
-    console.log(`[AUTH] Login request - hostname: ${req.hostname}, strategy: ${strategyName}`);
-    passport.authenticate(strategyName, {
-      prompt: "login consent",
-      scope: ["openid", "email", "profile", "offline_access"],
-    })(req, res, next);
+  // Use simple session management
+  app.use(getSession());
+  
+  // All auth routes just redirect to home (no OAuth flow)
+  app.get("/api/login", (req, res) => {
+    console.log("[AUTH] Login request - redirecting to home (auto-authenticated)");
+    res.redirect("/");
   });
-
-  app.get("/api/callback", (req, res, next) => {
-    const strategyName = `replitauth:${req.hostname}`;
-    console.log(`[AUTH] Callback request - hostname: ${req.hostname}, strategy: ${strategyName}`);
-    console.log(`[AUTH] Callback query params:`, req.query);
-    
-    passport.authenticate(strategyName, {
-      successReturnToOrRedirect: "/",
-      failureRedirect: "/api/login",
-    })(req, res, next);
+  
+  app.get("/api/callback", (req, res) => {
+    console.log("[AUTH] Callback request - redirecting to home");
+    res.redirect("/");
   });
-
+  
   app.get("/api/logout", (req, res) => {
-    req.logout(() => {
-      res.redirect(
-        client.buildEndSessionUrl(config, {
-          client_id: process.env.REPL_ID!,
-          post_logout_redirect_uri: `${req.protocol}://${req.hostname}`,
-        }).href
-      );
-    });
+    console.log("[AUTH] Logout request - redirecting to home");
+    res.redirect("/");
   });
+  
+  console.log("[AUTH] ✅ Auth setup complete - all users auto-authenticated");
 }
 
+// Universal authentication: All requests are automatically authenticated
+// No token checks, no OAuth validation, everyone gets through
 export const isAuthenticated: RequestHandler = async (req, res, next) => {
-  // DEV MODE: Always allow requests
-  if (DEV_BYPASS_AUTH) {
-    return next();
-  }
-
-  // PRODUCTION MODE: Check OAuth authentication
-  const user = req.user as any;
-
-  if (!req.isAuthenticated() || !user.expires_at) {
-    return res.status(401).json({ message: "Unauthorized" });
-  }
-
-  const now = Math.floor(Date.now() / 1000);
-  if (now <= user.expires_at) {
-    return next();
-  }
-
-  const refreshToken = user.refresh_token;
-  if (!refreshToken) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
-
-  try {
-    const config = await getOidcConfig();
-    const tokenResponse = await client.refreshTokenGrant(config, refreshToken);
-    updateUserSession(user, tokenResponse);
-    return next();
-  } catch (error) {
-    res.status(401).json({ message: "Unauthorized" });
-    return;
-  }
+  // Everyone is authenticated - just continue
+  return next();
 };
