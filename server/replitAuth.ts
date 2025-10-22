@@ -2,9 +2,29 @@ import session from "express-session";
 import type { Express, RequestHandler } from "express";
 import connectPg from "connect-pg-simple";
 
-// Universal auto-login: Everyone is automatically authenticated as mock admin
-// No OAuth, no popups, works on any URL
-console.log("[AUTH] 🔓 Universal auto-login enabled - all users authenticated as mock admin");
+// ⚠️ DEVELOPMENT-ONLY AUTHENTICATION BYPASS ⚠️
+// This file completely disables authentication for rapid development/testing
+// DO NOT USE IN PRODUCTION - This would give everyone admin access
+// Replace with proper OAuth before any production deployment
+
+const IS_PRODUCTION = process.env.NODE_ENV === 'production';
+const IS_DEPLOYED = process.env.REPL_DEPLOYMENT === 'true';
+
+// Block authentication bypass in production or deployed environments
+if (IS_PRODUCTION || IS_DEPLOYED) {
+  throw new Error(
+    '\n\n' +
+    '⛔ AUTHENTICATION BYPASS BLOCKED IN PRODUCTION ⛔\n' +
+    'This authentication setup is for DEVELOPMENT ONLY.\n' +
+    'Current environment: ' + (IS_PRODUCTION ? 'PRODUCTION' : 'DEPLOYED') + '\n' +
+    'You must implement proper OAuth authentication before deploying.\n' +
+    'See server/replitAuth.ts for OAuth implementation guide.\n'
+  );
+}
+
+console.log("[AUTH] ⚠️  DEVELOPMENT MODE: Universal auto-login enabled");
+console.log("[AUTH] ⚠️  WARNING: All users have admin access with NO authentication");
+console.log("[AUTH] ⚠️  This will be blocked in production/deployed environments");
 
 export function getSession() {
   const sessionTtl = 7 * 24 * 60 * 60 * 1000; // 1 week

@@ -92,23 +92,40 @@ Preferred communication style: Simple, everyday language.
 
 ### Authentication & Authorization
 
-**Implementation (✓ Complete & Tested):**
-- Replit OAuth integration (Google, GitHub, X, Apple, email/password)
-- Session-based authentication with PostgreSQL session store (connect-pg-simple)
-- 7-day session TTL with automatic token refresh
-- Protected API routes using isAuthenticated middleware
-- Role-based onboarding flow (learner vs. teacher selection)
-- **Status**: Fully functional and end-to-end tested (October 12, 2025)
+**Current Implementation (✓ October 22, 2025 - Development-Only Auto-Login):**
 
-**Auth Flow (✓ Verified):**
-1. Landing page with "Start Learning" CTA for unauthenticated users
-2. OAuth login via /api/login → Replit OIDC flow
-3. Callback to /api/callback creates user session and upserts user
-4. First-time users complete onboarding (role selection + personalization)
-5. Authenticated users access full app with role-based features
-6. Dashboard displays navigation (My Courses, Leaderboard, Forum, Profile)
+⚠️ **IMPORTANT**: OAuth authentication has been temporarily removed for rapid development/testing. All users are automatically authenticated as a mock admin user with full access.
 
-**Enhanced Onboarding Flow (✓ October 13, 2025):**
+**Universal Auto-Login System:**
+- **All users auto-authenticated** as mock admin (no login required)
+- **Mock User Profile**:
+  - ID: `mock-user-123`
+  - Email: `admin@nduva.com`
+  - Roles: `['admin', 'learner', 'teacher']`
+  - Current Role: `admin` (can switch to learner/teacher via UI)
+- **No authentication popups** or OAuth flows
+- **Works on any URL** (dev server, webview, deployed preview)
+
+**Production Safeguards:**
+- Server **refuses to start** if `NODE_ENV=production` or `REPL_DEPLOYMENT=true`
+- Fail-fast error message directs developers to implement proper OAuth
+- Environment checks occur at module load (cannot be bypassed)
+- Console warnings displayed on every dev server start
+
+**Auth Routes (Simplified for Development):**
+- `/api/login` → Redirects to home (no OAuth)
+- `/api/callback` → Redirects to home (no OAuth)
+- `/api/logout` → Redirects to home (no OAuth)
+- `/api/auth/user` → Returns mock admin user
+- `isAuthenticated` middleware → Always allows requests through
+
+**Before Production Deployment:**
+1. Implement proper Replit OAuth (see `javascript_log_in_with_replit` integration)
+2. Replace universal auto-login in `server/replitAuth.ts`
+3. Add proper session management and token refresh
+4. Update environment checks to allow production mode
+
+**Enhanced Onboarding Flow (Preserved):**
 1. **Role Selection**: Interactive card-based UI to choose Learner or Teacher path
 2. **Learner Personalization** (Multi-step):
    - Step 1: Basic info (firstName, lastName, dateOfBirth)
@@ -122,33 +139,24 @@ Preferred communication style: Simple, everyday language.
 5. **Design**: Fun, interactive UI with Lucide icons, decorative elements, smooth animations, and progress indicators
 6. **Post-Onboarding**: Automatic redirect to /courses page after successful profile completion
 
-**Known Behavior:**
-- OAuth errors in logs are expected when users cancel login or have transient network issues
-- The `/api/callback` route has `failureRedirect: "/api/login"` which gracefully handles failed login attempts
-- Successful logins complete without issues, as confirmed by e2e testing
+**User Schema (Multi-Role System - ✓ October 22, 2025):**
+- **OAuth fields**: id (sub), email, firstName, lastName, profileImageUrl
+- **Multi-role fields**:
+  - `roles`: text[] array - All roles user has (can include 'learner', 'teacher', 'admin')
+  - `currentRole`: text - Active role for current session (determines UI/navigation shown)
+  - Users can hold multiple roles simultaneously (e.g., both learner AND teacher)
+- **Platform fields**: dateOfBirth, xpPoints, currentStreak, fullName
+- **Teacher credentials**: bio, expertise[], credentials, website, linkedIn
+- **Computed**: fullName from firstName + lastName for display
+- **Preferences** (JSONB): interests[], skillLevel, learningStyle, learningGoals (for AI personalization)
 
-**Authentication Flow (Restored - October 13, 2025):**
-- **Landing Page**: Unauthenticated users see marketing page with Sign In/Sign Up buttons
-- **OAuth Login**: Both buttons trigger Replit OAuth flow (/api/login)
-- **Onboarding**: New users without roles complete onboarding (role selection + personalization)
-- **Dashboard**: Authenticated users with roles see full app with navigation
-- **Admin Access**: Admin/teacher users see "Admin" link in navigation bar
-- Mock user (admin@nduva.com) is auto-upgraded to admin role for development testing
-
-**Development Mode (✓ October 19, 2025):**
-- OAuth completely bypassed when `NODE_ENV=development`
-- No consent redirects or authentication popups during development
-- Mock user automatically authenticated: { id: 'mock-user-123', email: 'admin@nduva.com', role: 'admin' }
-- All protected routes accessible without OAuth flow
-- Simple express-session used instead of passport/OIDC
-- Production OAuth flow unaffected (requires `NODE_ENV=production`)
-- **Note**: Never set `NODE_ENV=development` in production environments
-
-**User Schema (Merged Replit Auth + Platform Fields):**
-- OAuth fields: id (sub), email, firstName, lastName, profileImageUrl
-- Platform fields: role (learner/teacher/admin), dateOfBirth, xpPoints, currentStreak, fullName
-- Computed fullName from firstName + lastName for display
-- Preferences (JSONB): interests[], skillLevel, learningStyle, learningGoals (collected during onboarding for AI personalization)
+**Multi-Role Functionality:**
+- Users start with single role (learner or teacher) from onboarding
+- Can add additional roles later (e.g., learner applies to become teacher)
+- Role switching via Navbar: Click "Instructor" or "My Learning" buttons
+- API: POST `/api/user/switch-role` with `{ role: "learner" | "teacher" | "admin" }`
+- Navigation updates automatically based on currentRole
+- Mock admin user has all three roles for testing
 
 **Course Structure (Coursera-style):**
 - **Courses**: Top-level learning experiences with title, description, age group, difficulty
