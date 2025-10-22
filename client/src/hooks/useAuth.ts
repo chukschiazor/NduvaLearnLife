@@ -30,17 +30,43 @@ export function useAuth() {
     },
   });
 
+  const switchRoleMutation = useMutation({
+    mutationFn: async (role: "learner" | "teacher" | "admin") => {
+      const res = await apiRequest("POST", "/api/user/switch-role", { role });
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["/api/auth/user"] });
+    },
+  });
+
   // User is authenticated when user data is loaded
   const isAuthenticated = !!user;
   
-  // User needs onboarding if they don't have a role set yet
-  const needsOnboarding = isAuthenticated && !user.role;
+  // User needs onboarding if they don't have any roles set yet
+  const needsOnboarding = isAuthenticated && (!user.roles || user.roles.length === 0);
+
+  // Helper function to check if user has a specific role
+  const hasRole = (role: "learner" | "teacher" | "admin"): boolean => {
+    return user?.roles?.includes(role) || false;
+  };
+
+  // Get current role
+  const currentRole = user?.currentRole;
+  
+  // Get all roles
+  const roles = user?.roles || [];
 
   return {
     user,
     isLoading,
     isAuthenticated,
     needsOnboarding,
+    currentRole,
+    roles,
+    hasRole,
+    switchRole: switchRoleMutation.mutateAsync,
+    isSwitchingRole: switchRoleMutation.isPending,
     completeProfile: completeProfileMutation.mutateAsync,
     isCompletingProfile: completeProfileMutation.isPending,
   };
