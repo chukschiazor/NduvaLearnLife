@@ -3,6 +3,7 @@ import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { BookOpen, Clock, Award } from "lucide-react";
 import { Link } from "wouter";
 import type { Course, Enrollment } from "@shared/schema";
@@ -11,8 +12,8 @@ import { useAuth } from "@/hooks/useAuth";
 export default function MyLearning() {
   const { user } = useAuth();
   
-  // Fetch user's enrolled courses (user-specific endpoint)
-  const { data: enrollments = [], isLoading: enrollmentsLoading } = useQuery<Enrollment[]>({
+  // Fetch user's enrolled courses with progress
+  const { data: enrolledCoursesData = [], isLoading: enrollmentsLoading } = useQuery<Array<{ course: Course; enrollment: Enrollment }>>({
     queryKey: ['/api/enrollments/me'],
   });
 
@@ -22,10 +23,7 @@ export default function MyLearning() {
   });
 
   // Get enrolled course IDs
-  const enrolledCourseIds = new Set(enrollments.map(e => e.courseId));
-  
-  // Filter courses user is enrolled in
-  const enrolledCourses = allCourses.filter(course => enrolledCourseIds.has(course.id));
+  const enrolledCourseIds = new Set(enrolledCoursesData.map(({ course }) => course.id));
   
   // Get recommended courses (not enrolled, published only)
   const recommendedCourses = allCourses
@@ -34,19 +32,30 @@ export default function MyLearning() {
 
   const isLoading = enrollmentsLoading || coursesLoading;
 
+  // Get user initials for avatar fallback
+  const userInitials = user?.firstName && user?.lastName 
+    ? `${user.firstName[0]}${user.lastName[0]}`.toUpperCase()
+    : user?.email?.[0]?.toUpperCase() || 'U';
+
   return (
     <div className="min-h-screen bg-background flex flex-col">
       <Navbar />
       
       <main className="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Welcome Section */}
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-2" data-testid="text-welcome-message">
-            Welcome back, {user?.firstName || 'Learner'}! 👋
-          </h1>
-          <p className="text-muted-foreground">
-            Continue your learning journey
-          </p>
+        {/* Welcome Section with Avatar (Udemy-style) */}
+        <div className="mb-8 flex items-center gap-4">
+          <Avatar className="h-16 w-16" data-testid="avatar-user">
+            <AvatarImage src={user?.profileImageUrl || undefined} alt={user?.firstName || 'User'} />
+            <AvatarFallback className="text-lg">{userInitials}</AvatarFallback>
+          </Avatar>
+          <div>
+            <h1 className="text-3xl font-bold mb-1" data-testid="text-welcome-message">
+              Welcome back, {user?.firstName || 'Learner'}!
+            </h1>
+            <p className="text-muted-foreground">
+              Continue your learning journey
+            </p>
+          </div>
         </div>
 
         {/* Enrolled Courses Section */}
@@ -67,7 +76,7 @@ export default function MyLearning() {
                 </Card>
               ))}
             </div>
-          ) : enrolledCourses.length === 0 ? (
+          ) : enrolledCoursesData.length === 0 ? (
             <Card className="border-dashed" data-testid="card-empty-state">
               <CardContent className="flex flex-col items-center justify-center py-12">
                 <BookOpen className="h-16 w-16 text-muted-foreground mb-4" />
@@ -85,9 +94,8 @@ export default function MyLearning() {
             </Card>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {enrolledCourses.map((course) => {
-                const enrollment = enrollments.find(e => e.courseId === course.id);
-                const progress = enrollment?.progressPercentage || 0;
+              {enrolledCoursesData.map(({ course, enrollment }) => {
+                const progress = enrollment.progressPercentage || 0;
                 
                 return (
                   <Link key={course.id} href={`/classroom/${course.id}`}>

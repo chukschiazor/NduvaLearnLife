@@ -1,15 +1,17 @@
 import { Link, useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
-import { BookOpen, Trophy, MessageSquare, User, Menu, X, LogIn, Settings } from "lucide-react";
+import { BookOpen, Trophy, MessageSquare, User, Menu, X, LogIn, GraduationCap } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
 import Logo from "./Logo";
 import { useState } from "react";
 import { useAuth, login } from "@/hooks/useAuth";
+import { useToast } from "@/hooks/use-toast";
 
 export default function Navbar() {
   const [location] = useLocation();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { user, isAuthenticated, isLoading } = useAuth();
+  const { user, isAuthenticated, isLoading, currentRole, hasRole, switchRole, isSwitchingRole } = useAuth();
+  const { toast } = useToast();
 
   const navItems = [
     { path: "/courses", label: "Explore", icon: BookOpen },
@@ -18,12 +20,29 @@ export default function Navbar() {
     { path: "/profile", label: "Profile", icon: User },
   ];
 
-  // Add role-specific learning/teaching link
-  if (user?.role === "learner") {
+  // Add role-specific learning/teaching link based on current role
+  if (currentRole === "learner") {
     navItems.splice(1, 0, { path: "/my-learning", label: "My Learning", icon: BookOpen });
-  } else if (user?.role === "teacher" || user?.role === "admin") {
+  } else if (currentRole === "teacher" || currentRole === "admin") {
     navItems.splice(1, 0, { path: "/my-courses", label: "My Courses", icon: BookOpen });
   }
+
+  // Handle role switching
+  const handleRoleSwitch = async (newRole: "learner" | "teacher") => {
+    try {
+      await switchRole(newRole);
+      toast({
+        title: "Role switched",
+        description: `You are now in ${newRole} mode`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to switch role",
+        variant: "destructive",
+      });
+    }
+  };
 
   return (
     <nav className="sticky top-0 z-50 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -54,6 +73,32 @@ export default function Navbar() {
                       </Link>
                     );
                   })}
+                  
+                  {/* Role Switcher (Udemy-style) */}
+                  {currentRole === "learner" && hasRole("teacher") && (
+                    <Button
+                      variant="ghost"
+                      className="gap-2"
+                      onClick={() => handleRoleSwitch("teacher")}
+                      disabled={isSwitchingRole}
+                      data-testid="button-switch-to-instructor"
+                    >
+                      <GraduationCap className="h-4 w-4" />
+                      Instructor
+                    </Button>
+                  )}
+                  {(currentRole === "teacher" || currentRole === "admin") && hasRole("learner") && (
+                    <Button
+                      variant="ghost"
+                      className="gap-2"
+                      onClick={() => handleRoleSwitch("learner")}
+                      disabled={isSwitchingRole}
+                      data-testid="button-switch-to-learning"
+                    >
+                      <BookOpen className="h-4 w-4" />
+                      My Learning
+                    </Button>
+                  )}
                 </div>
               ) : (
                 <div className="hidden md:flex items-center gap-2">
@@ -110,6 +155,38 @@ export default function Navbar() {
                 </Link>
               );
             })}
+            
+            {/* Role Switcher for Mobile */}
+            {currentRole === "learner" && hasRole("teacher") && (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  handleRoleSwitch("teacher");
+                  setMobileMenuOpen(false);
+                }}
+                disabled={isSwitchingRole}
+                data-testid="button-switch-to-instructor-mobile"
+              >
+                <GraduationCap className="h-4 w-4" />
+                Instructor
+              </Button>
+            )}
+            {(currentRole === "teacher" || currentRole === "admin") && hasRole("learner") && (
+              <Button
+                variant="ghost"
+                className="w-full justify-start gap-2"
+                onClick={() => {
+                  handleRoleSwitch("learner");
+                  setMobileMenuOpen(false);
+                }}
+                disabled={isSwitchingRole}
+                data-testid="button-switch-to-learning-mobile"
+              >
+                <BookOpen className="h-4 w-4" />
+                My Learning
+              </Button>
+            )}
           </div>
         )}
       </div>
