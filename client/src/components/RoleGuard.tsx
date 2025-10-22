@@ -9,7 +9,7 @@ interface RoleGuardProps {
 }
 
 export default function RoleGuard({ allowedRoles, children, redirectTo = "/" }: RoleGuardProps) {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, hasRole } = useAuth();
 
   if (isLoading) {
     return (
@@ -19,7 +19,10 @@ export default function RoleGuard({ allowedRoles, children, redirectTo = "/" }: 
     );
   }
 
-  if (!user || !allowedRoles.includes(user.role as any)) {
+  // Check if user has at least one of the allowed roles
+  const hasAllowedRole = user && allowedRoles.some(role => hasRole(role));
+
+  if (!hasAllowedRole) {
     return <Redirect to={redirectTo} />;
   }
 
