@@ -287,17 +287,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // TEMPORARY: Use mock user for development
       const user = await (storage as any).getMockUser();
-      const enrollments = await storage.getUserEnrollments(user.id);
-      
-      // Fetch course details for each enrollment
-      const enrichedEnrollments = await Promise.all(
-        enrollments.map(async (enrollment) => {
-          const course = await storage.getCourse(enrollment.courseId);
-          return { ...enrollment, course };
-        })
-      );
-      
-      res.json(enrichedEnrollments);
+      const enrolledCourses = await storage.getEnrolledCoursesWithProgress(user.id);
+      res.json(enrolledCourses);
     } catch (error) {
       console.error("Error fetching enrollments:", error);
       res.status(500).json({ message: "Failed to fetch enrollments" });

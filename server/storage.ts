@@ -80,6 +80,7 @@ export interface IStorage {
   // Enrollment operations
   enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
   getUserEnrollments(userId: string): Promise<Enrollment[]>;
+  getEnrolledCoursesWithProgress(userId: string): Promise<Array<{ course: Course; enrollment: Enrollment }>>;
   updateEnrollmentProgress(enrollmentId: string, progress: number, completedLessons: number): Promise<Enrollment>;
   
   // Gamification
@@ -370,6 +371,20 @@ export class DatabaseStorage implements IStorage {
 
   async getUserEnrollments(userId: string): Promise<Enrollment[]> {
     return db.select().from(enrollments).where(eq(enrollments.userId, userId));
+  }
+
+  async getEnrolledCoursesWithProgress(userId: string): Promise<Array<{ course: Course; enrollment: Enrollment }>> {
+    const results = await db
+      .select({
+        course: courses,
+        enrollment: enrollments,
+      })
+      .from(enrollments)
+      .innerJoin(courses, eq(enrollments.courseId, courses.id))
+      .where(eq(enrollments.userId, userId))
+      .orderBy(desc(enrollments.lastAccessedAt));
+    
+    return results;
   }
 
   async updateEnrollmentProgress(enrollmentId: string, progress: number, completedLessons: number): Promise<Enrollment> {
