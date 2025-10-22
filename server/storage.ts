@@ -46,6 +46,8 @@ export interface IStorage {
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
   updateUserRole(id: string, role: "learner" | "teacher" | "admin", dateOfBirth?: string): Promise<User>;
+  addUserRole(id: string, role: "learner" | "teacher" | "admin"): Promise<User>;
+  switchUserRole(id: string, newCurrentRole: "learner" | "teacher" | "admin"): Promise<User>;
   completeUserProfile(id: string, data: { firstName: string; lastName: string; role: "learner" | "teacher"; dateOfBirth: string; preferences?: any }): Promise<User>;
   
   // Course operations
@@ -135,7 +137,7 @@ export class DatabaseStorage implements IStorage {
         .where(eq(users.id, mockUserId));
       
       user = await this.getUser(mockUserId) as User;
-    } else if (user.role !== "admin") {
+    } else if (!user.roles?.includes("admin")) {
       // Force upgrade existing mock user to admin role
       user = await this.updateUserRole(mockUserId, "admin", user.dateOfBirth || "1990-01-15");
     }
@@ -171,11 +173,61 @@ export class DatabaseStorage implements IStorage {
   }
 
   async updateUserRole(id: string, role: "learner" | "teacher" | "admin", dateOfBirth?: string): Promise<User> {
+    // This method sets a single role (for backward compatibility and initial setup)
     const [user] = await db
       .update(users)
       .set({ 
-        role,
+        roles: [role],
+        currentRole: role,
         ...(dateOfBirth && { dateOfBirth }),
+        updatedAt: new Date() 
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return user;
+  }
+
+  async addUserRole(id: string, role: "learner" | "teacher" | "admin"): Promise<User> {
+    // Get current user to check existing roles
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    // Add role if not already present
+    const currentRoles = currentUser.roles || [];
+    if (!currentRoles.includes(role)) {
+      const newRoles = [...currentRoles, role];
+      const [user] = await db
+        .update(users)
+        .set({ 
+          roles: newRoles,
+          updatedAt: new Date() 
+        })
+        .where(eq(users.id, id))
+        .returning();
+      return user;
+    }
+    
+    return currentUser;
+  }
+
+  async switchUserRole(id: string, newCurrentRole: "learner" | "teacher" | "admin"): Promise<User> {
+    // Verify user has the role they're trying to switch to
+    const currentUser = await this.getUser(id);
+    if (!currentUser) {
+      throw new Error("User not found");
+    }
+
+    const userRoles = currentUser.roles || [];
+    if (!userRoles.includes(newCurrentRole)) {
+      throw new Error(`User does not have ${newCurrentRole} role`);
+    }
+
+    const [user] = await db
+      .update(users)
+      .set({ 
+        currentRole: newCurrentRole,
         updatedAt: new Date() 
       })
       .where(eq(users.id, id))
@@ -191,7 +243,8 @@ export class DatabaseStorage implements IStorage {
         firstName: data.firstName,
         lastName: data.lastName,
         fullName,
-        role: data.role,
+        roles: [data.role], // Initialize roles array with selected role
+        currentRole: data.role, // Set current role to selected role
         dateOfBirth: data.dateOfBirth,
         ...(data.preferences && { preferences: data.preferences }),
         updatedAt: new Date()

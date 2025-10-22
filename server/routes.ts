@@ -49,6 +49,31 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Role switching endpoint
+  app.post('/api/user/switch-role', async (req: any, res) => {
+    try {
+      const { role } = req.body;
+      
+      if (!role || !['learner', 'teacher', 'admin'].includes(role)) {
+        return res.status(400).json({ message: "Invalid role specified" });
+      }
+
+      // TEMPORARY: Use mock user for development
+      const mockUser = await (storage as any).getMockUser();
+      
+      // Switch the user's current role
+      const updatedUser = await storage.switchUserRole(mockUser.id, role);
+      
+      res.json(updatedUser);
+    } catch (error: any) {
+      console.error("Error switching role:", error);
+      if (error.message?.includes("does not have")) {
+        return res.status(403).json({ message: error.message });
+      }
+      res.status(500).json({ message: "Failed to switch role" });
+    }
+  });
+
   // ============ Course Routes ============
   app.get('/api/courses', async (req, res) => {
     try {
@@ -70,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await (storage as any).getMockUser();
       
-      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
         return res.status(403).json({ message: "Only teachers can access this endpoint" });
       }
 
@@ -101,7 +126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await (storage as any).getMockUser();
       
-      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
         return res.status(403).json({ message: "Only teachers/admins can access analytics" });
       }
 
@@ -111,7 +136,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       // Verify the course belongs to the teacher (unless admin)
-      if (user.role === 'teacher' && course.createdByTeacherId !== user.id) {
+      if (user.currentRole === 'teacher' && course.createdByTeacherId !== user.id) {
         return res.status(403).json({ message: "You can only view analytics for your own courses" });
       }
 
@@ -128,7 +153,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // TEMPORARY: Use mock user for development
       const user = await (storage as any).getMockUser();
       
-      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
         return res.status(403).json({ message: "Only teachers can create courses" });
       }
 
@@ -160,7 +185,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await (storage as any).getMockUser();
       
-      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
         return res.status(403).json({ message: "Only teachers/admins can create modules" });
       }
 
@@ -192,7 +217,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await (storage as any).getMockUser();
       
-      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
         return res.status(403).json({ message: "Only teachers/admins can create sessions" });
       }
 
@@ -228,7 +253,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await (storage as any).getMockUser();
       
-      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
         return res.status(403).json({ message: "Only teachers/admins can delete modules" });
       }
 
@@ -245,7 +270,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const user = await (storage as any).getMockUser();
       
-      if (user?.role !== 'teacher' && user?.role !== 'admin') {
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
         return res.status(403).json({ message: "Only teachers/admins can delete sessions" });
       }
 

@@ -57,7 +57,8 @@ export const users = pgTable("users", {
   // Learning Platform fields
   fullName: text("full_name"), // Computed from firstName + lastName or manually entered
   dateOfBirth: date("date_of_birth"),
-  role: roleEnum("role").notNull().default("learner"),
+  roles: text("roles").array().notNull().default(sql`ARRAY['learner']::text[]`),
+  currentRole: text("currentRole").notNull().default("learner"),
   xpPoints: integer("xp_points").notNull().default(0),
   currentStreak: integer("current_streak").notNull().default(0),
   lastActiveDate: date("last_active_date"),
@@ -65,6 +66,7 @@ export const users = pgTable("users", {
   // Teacher profile fields
   bio: text("bio"),
   expertiseAreas: jsonb("expertise_areas").default([]),
+  credentials: text("credentials"),
   websiteUrl: text("website_url"),
   linkedinUrl: text("linkedin_url"),
   twitterUrl: text("twitter_url"),
@@ -337,7 +339,8 @@ export const insertUserSchema = createInsertSchema(users, {
   email: z.string().email().optional(),
   fullName: z.string().min(2).max(100).optional(),
   dateOfBirth: z.string().transform(str => new Date(str)).optional(),
-  role: z.enum(["learner", "teacher", "admin"]).optional(),
+  roles: z.array(z.enum(["learner", "teacher", "admin"])).optional(),
+  currentRole: z.enum(["learner", "teacher", "admin"]).optional(),
 }).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Upsert user schema for Replit Auth
