@@ -73,6 +73,13 @@ Preferred communication style: Simple, everyday language.
   - **Access Control**: Only course owners and admins can view analytics
   - **Backend**: GET `/api/courses/:id/analytics` endpoint with enrollment aggregations
   - **Navigation**: Accessible from My Courses via "Analytics" button on each course card
+- **Course Creation System**: Full CourseBuilder interface for teachers/admins (✓ October 24, 2025)
+  - **Schema Changes**: Quizzes moved from lesson-level to module-level, projects table added
+  - **CourseBuilder UI**: Comprehensive interface at `/course-builder/:courseId` with module/session/quiz/project management
+  - **Quiz System**: Multi-question-type support (multiple choice, true/false, short answer) with JSONB answers
+  - **Project System**: Module-level projects with deliverables (text array), instructions, and duration estimates
+  - **Query Optimization**: Fixed React Query dependencies so quizzes/projects only load after modules are available
+  - **API Routes**: Complete CRUD for modules, sessions, quizzes, projects with proper foreign key relationships
 - **Development**: HMR via Vite, TypeScript type safety throughout
 
 ### Data Architecture
