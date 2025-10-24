@@ -32,7 +32,7 @@
 
   --sidebar-border: 0 0% 85%;
 
-  --sidebar-primary: 245 82% 58%;
+  --sidebar-primary: 174 65% 48%;
 
   --sidebar-primary-foreground: 0 0% 100%;
 
@@ -40,7 +40,7 @@
 
   --sidebar-accent-foreground: 0 0% 10%;
 
-  --sidebar-ring: 245 82% 58%;
+  --sidebar-ring: 174 65% 48%;
 
   --popover: 0 0% 96%;
 
@@ -48,11 +48,11 @@
 
   --popover-border: 0 0% 88%;
 
-  --primary: 245 82% 58%;
+  --primary: 174 65% 48%;
 
   --primary-foreground: 0 0% 100%;
 
-  --secondary: 340 75% 55%;
+  --secondary: 120 25% 50%;
 
   --secondary-foreground: 0 0% 100%;
 
@@ -60,7 +60,7 @@
 
   --muted-foreground: 0 0% 45%;
 
-  --accent: 340 60% 90%;
+  --accent: 120 30% 85%;
 
   --accent-foreground: 0 0% 10%;
 
@@ -73,12 +73,12 @@
   --warning: 38 92% 50%;
 
   --input: 0 0% 85%;
-  --ring: 245 82% 58%;
-  --chart-1: 245 82% 58%;
-  --chart-2: 340 75% 55%;
-  --chart-3: 142 71% 45%;
-  --chart-4: 38 92% 50%;
-  --chart-5: 200 80% 55%;
+  --ring: 174 65% 48%;
+  --chart-1: 174 65% 48%;
+  --chart-2: 120 40% 50%;
+  --chart-3: 142 71% 38%;
+  --chart-4: 38 92% 45%;
+  --chart-5: 200 80% 42%;
 
   --font-sans: Inter, system-ui, -apple-system, sans-serif;
   --font-serif: Georgia, serif;
