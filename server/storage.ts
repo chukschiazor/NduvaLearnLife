@@ -125,12 +125,12 @@ export class DatabaseStorage implements IStorage {
         profileImageUrl: null,
       });
       
-      // Set them as an admin for testing course creation
-      user = await this.updateUserRole(mockUserId, "admin", "1990-01-15");
-      
-      // Give them some XP and streak
+      // Set mock user with ALL roles for testing
       await db.update(users)
         .set({ 
+          roles: ['admin', 'learner', 'teacher'],
+          currentRole: 'admin',
+          dateOfBirth: "1990-01-15",
           xpPoints: 450, 
           currentStreak: 5,
           updatedAt: new Date() 
@@ -138,9 +138,23 @@ export class DatabaseStorage implements IStorage {
         .where(eq(users.id, mockUserId));
       
       user = await this.getUser(mockUserId) as User;
-    } else if (!user.roles?.includes("admin")) {
-      // Force upgrade existing mock user to admin role
-      user = await this.updateUserRole(mockUserId, "admin", user.dateOfBirth || "1990-01-15");
+    } else {
+      // Ensure existing mock user always has all three roles
+      const hasAllRoles = user.roles?.includes("admin") && 
+                         user.roles?.includes("learner") && 
+                         user.roles?.includes("teacher");
+      
+      if (!hasAllRoles) {
+        await db.update(users)
+          .set({ 
+            roles: ['admin', 'learner', 'teacher'],
+            currentRole: user.currentRole || 'admin',
+            updatedAt: new Date() 
+          })
+          .where(eq(users.id, mockUserId));
+        
+        user = await this.getUser(mockUserId) as User;
+      }
     }
     
     return user;
@@ -238,13 +252,23 @@ export class DatabaseStorage implements IStorage {
 
   async completeUserProfile(id: string, data: { firstName: string; lastName: string; role: "learner" | "teacher"; dateOfBirth: string; preferences?: any }): Promise<User> {
     const fullName = `${data.firstName} ${data.lastName}`;
+    
+    // Get current user to preserve existing roles
+    const currentUser = await this.getUser(id);
+    const currentRoles = currentUser?.roles || [];
+    
+    // Add the new role to existing roles (if not already present)
+    const newRoles = currentRoles.includes(data.role) 
+      ? currentRoles 
+      : [...currentRoles, data.role];
+    
     const [user] = await db
       .update(users)
       .set({
         firstName: data.firstName,
         lastName: data.lastName,
         fullName,
-        roles: [data.role], // Initialize roles array with selected role
+        roles: newRoles, // Add to existing roles instead of replacing
         currentRole: data.role, // Set current role to selected role
         dateOfBirth: data.dateOfBirth,
         ...(data.preferences && { preferences: data.preferences }),
