@@ -173,15 +173,28 @@ export const lessons = pgTable("lessons", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
-// Quizzes
+// Quizzes (Module-level assessments)
 export const quizzes = pgTable("quizzes", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
-  lessonId: varchar("lesson_id").notNull().references(() => lessons.id),
+  moduleId: varchar("module_id").notNull().references(() => modules.id),
   title: text("title").notNull(),
   passingScorePercentage: integer("passing_score_percentage").notNull().default(70),
   timeLimitMinutes: integer("time_limit_minutes"),
   shuffleQuestions: boolean("shuffle_questions").notNull().default(false),
   maxAttempts: integer("max_attempts").default(3),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Projects (Module-level assignments)
+export const projects = pgTable("projects", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  moduleId: varchar("module_id").notNull().references(() => modules.id),
+  title: text("title").notNull(),
+  description: text("description").notNull(),
+  instructions: text("instructions").notNull(),
+  deliverables: jsonb("deliverables").notNull().default([]),
+  estimatedDurationMinutes: integer("estimated_duration_minutes"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
@@ -404,6 +417,7 @@ export const insertCourseSessionSchema = createInsertSchema(courseSessions).omit
 export const insertLessonSchema = createInsertSchema(lessons).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertQuizSchema = createInsertSchema(quizzes).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertQuizQuestionSchema = createInsertSchema(quizQuestions).omit({ id: true, createdAt: true });
+export const insertProjectSchema = createInsertSchema(projects).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertEnrollmentSchema = createInsertSchema(enrollments).omit({ id: true });
 export const insertQuizAttemptSchema = createInsertSchema(quizAttempts).omit({ id: true });
 export const insertPostSchema = createInsertSchema(posts).omit({ id: true, createdAt: true, updatedAt: true });
@@ -428,6 +442,8 @@ export type Quiz = typeof quizzes.$inferSelect;
 export type InsertQuiz = z.infer<typeof insertQuizSchema>;
 export type QuizQuestion = typeof quizQuestions.$inferSelect;
 export type QuizAnswer = typeof quizAnswers.$inferSelect;
+export type Project = typeof projects.$inferSelect;
+export type InsertProject = z.infer<typeof insertProjectSchema>;
 export type Enrollment = typeof enrollments.$inferSelect;
 export type InsertEnrollment = z.infer<typeof insertEnrollmentSchema>;
 export type EnrollmentWithCourse = Enrollment & { course: Course | null };

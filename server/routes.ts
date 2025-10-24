@@ -6,6 +6,9 @@ import {
   insertCourseSchema, 
   insertModuleSchema,
   insertCourseSessionSchema,
+  insertQuizSchema,
+  insertQuizQuestionSchema,
+  insertProjectSchema,
   insertEnrollmentSchema, 
   insertPostSchema, 
   insertCommentSchema,
@@ -279,6 +282,135 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error deleting session:", error);
       res.status(500).json({ message: "Failed to delete session" });
+    }
+  });
+
+  // ============ Quiz Routes (Admin/Teacher) ============
+  app.post('/api/modules/:moduleId/quizzes', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
+        return res.status(403).json({ message: "Only teachers/admins can create quizzes" });
+      }
+
+      const quizData = insertQuizSchema.parse({
+        ...req.body,
+        moduleId: req.params.moduleId,
+      });
+
+      const quiz = await storage.createQuiz(quizData);
+      res.status(201).json(quiz);
+    } catch (error) {
+      console.error("Error creating quiz:", error);
+      res.status(500).json({ message: "Failed to create quiz" });
+    }
+  });
+
+  app.get('/api/modules/:moduleId/quizzes', async (req, res) => {
+    try {
+      const quizzes = await storage.getQuizzesByModule(req.params.moduleId);
+      res.json(quizzes);
+    } catch (error) {
+      console.error("Error fetching quizzes:", error);
+      res.status(500).json({ message: "Failed to fetch quizzes" });
+    }
+  });
+
+  app.post('/api/quizzes/:quizId/questions', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
+        return res.status(403).json({ message: "Only teachers/admins can add quiz questions" });
+      }
+
+      const questionData = insertQuizQuestionSchema.parse({
+        ...req.body,
+        quizId: req.params.quizId,
+      });
+
+      const question = await storage.createQuizQuestion(questionData);
+      res.status(201).json(question);
+    } catch (error) {
+      console.error("Error creating quiz question:", error);
+      res.status(500).json({ message: "Failed to create quiz question" });
+    }
+  });
+
+  app.get('/api/quizzes/:quizId/questions', async (req, res) => {
+    try {
+      const questions = await storage.getQuizQuestions(req.params.quizId);
+      res.json(questions);
+    } catch (error) {
+      console.error("Error fetching quiz questions:", error);
+      res.status(500).json({ message: "Failed to fetch quiz questions" });
+    }
+  });
+
+  // Delete quiz
+  app.delete('/api/quizzes/:quizId', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
+        return res.status(403).json({ message: "Only teachers/admins can delete quizzes" });
+      }
+
+      await storage.deleteQuiz(req.params.quizId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting quiz:", error);
+      res.status(500).json({ message: "Failed to delete quiz" });
+    }
+  });
+
+  // ============ Project Routes (Admin/Teacher) ============
+  app.post('/api/modules/:moduleId/projects', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
+        return res.status(403).json({ message: "Only teachers/admins can create projects" });
+      }
+
+      const projectData = insertProjectSchema.parse({
+        ...req.body,
+        moduleId: req.params.moduleId,
+      });
+
+      const project = await storage.createProject(projectData);
+      res.status(201).json(project);
+    } catch (error) {
+      console.error("Error creating project:", error);
+      res.status(500).json({ message: "Failed to create project" });
+    }
+  });
+
+  app.get('/api/modules/:moduleId/projects', async (req, res) => {
+    try {
+      const projects = await storage.getProjectsByModule(req.params.moduleId);
+      res.json(projects);
+    } catch (error) {
+      console.error("Error fetching projects:", error);
+      res.status(500).json({ message: "Failed to fetch projects" });
+    }
+  });
+
+  // Delete project
+  app.delete('/api/projects/:projectId', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
+        return res.status(403).json({ message: "Only teachers/admins can delete projects" });
+      }
+
+      await storage.deleteProject(req.params.projectId);
+      res.status(204).send();
+    } catch (error) {
+      console.error("Error deleting project:", error);
+      res.status(500).json({ message: "Failed to delete project" });
     }
   });
 

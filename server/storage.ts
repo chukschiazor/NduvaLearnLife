@@ -7,6 +7,7 @@ import {
   quizzes,
   quizQuestions,
   quizAnswers,
+  projects,
   enrollments,
   quizAttempts,
   lessonViews,
@@ -27,6 +28,10 @@ import {
   type Lesson,
   type InsertLesson,
   type Quiz,
+  type InsertQuiz,
+  type QuizQuestion,
+  type Project,
+  type InsertProject,
   type Enrollment,
   type InsertEnrollment,
   type Post,
@@ -75,7 +80,18 @@ export interface IStorage {
   getLesson(id: string): Promise<Lesson | undefined>;
   
   // Quiz operations
-  getQuizByLesson(lessonId: string): Promise<Quiz | undefined>;
+  createQuiz(quiz: InsertQuiz): Promise<Quiz>;
+  getQuizByModule(moduleId: string): Promise<Quiz | undefined>;
+  getQuizzesByModule(moduleId: string): Promise<Quiz[]>;
+  createQuizQuestion(question: any): Promise<QuizQuestion>;
+  getQuizQuestions(quizId: string): Promise<QuizQuestion[]>;
+  deleteQuiz(quizId: string): Promise<void>;
+  
+  // Project operations
+  createProject(project: InsertProject): Promise<Project>;
+  getProjectByModule(moduleId: string): Promise<Project | undefined>;
+  getProjectsByModule(moduleId: string): Promise<Project[]>;
+  deleteProject(projectId: string): Promise<void>;
   
   // Enrollment operations
   enrollInCourse(enrollment: InsertEnrollment): Promise<Enrollment>;
@@ -382,9 +398,53 @@ export class DatabaseStorage implements IStorage {
   }
 
   // Quiz operations
-  async getQuizByLesson(lessonId: string): Promise<Quiz | undefined> {
-    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.lessonId, lessonId));
+  async createQuiz(quiz: InsertQuiz): Promise<Quiz> {
+    const [newQuiz] = await db.insert(quizzes).values(quiz).returning();
+    return newQuiz;
+  }
+
+  async getQuizByModule(moduleId: string): Promise<Quiz | undefined> {
+    const [quiz] = await db.select().from(quizzes).where(eq(quizzes.moduleId, moduleId));
     return quiz;
+  }
+
+  async getQuizzesByModule(moduleId: string): Promise<Quiz[]> {
+    return db.select().from(quizzes).where(eq(quizzes.moduleId, moduleId));
+  }
+
+  async createQuizQuestion(question: any): Promise<QuizQuestion> {
+    const [newQuestion] = await db.insert(quizQuestions).values(question).returning();
+    return newQuestion;
+  }
+
+  async getQuizQuestions(quizId: string): Promise<QuizQuestion[]> {
+    return db.select().from(quizQuestions).where(eq(quizQuestions.quizId, quizId)).orderBy(quizQuestions.sequenceOrder);
+  }
+
+  async deleteQuiz(quizId: string): Promise<void> {
+    // First delete all questions in this quiz
+    await db.delete(quizQuestions).where(eq(quizQuestions.quizId, quizId));
+    // Then delete the quiz
+    await db.delete(quizzes).where(eq(quizzes.id, quizId));
+  }
+
+  // Project operations
+  async createProject(project: InsertProject): Promise<Project> {
+    const [newProject] = await db.insert(projects).values(project).returning();
+    return newProject;
+  }
+
+  async getProjectByModule(moduleId: string): Promise<Project | undefined> {
+    const [project] = await db.select().from(projects).where(eq(projects.moduleId, moduleId));
+    return project;
+  }
+
+  async getProjectsByModule(moduleId: string): Promise<Project[]> {
+    return db.select().from(projects).where(eq(projects.moduleId, moduleId));
+  }
+
+  async deleteProject(projectId: string): Promise<void> {
+    await db.delete(projects).where(eq(projects.id, projectId));
   }
 
   // Enrollment operations
