@@ -58,6 +58,11 @@ Preferred communication style: Simple, everyday language.
 - **Authentication**: Replit OAuth fully integrated with session management
 - **Storage Layer**: DatabaseStorage implementation with CRUD operations for all entities
 - **API Routes**: RESTful endpoints for auth, courses, modules, sessions, enrollments, gamification, and community
+  - **Course Endpoints** (✓ October 27, 2025):
+    - `GET /api/courses` - Public endpoint, returns published courses only (for learners/Explore page)
+    - `GET /api/teacher/courses` - Returns teacher's own courses (draft + published)
+    - `GET /api/admin/courses` - Admin-only endpoint, returns ALL courses from ALL teachers (draft + published)
+  - **HTTP Caching**: Cache-Control middleware disables browser caching for all /api routes to prevent stale 304 responses
 - **Frontend Auth**: useAuth hook, landing page, enhanced onboarding flow, sign in/sign up buttons
 - **Onboarding**: Multi-step learner onboarding with AI personalization data collection (✓ October 13, 2025)
 - **Admin Dashboard**: Course management with Coursera-style modules and sessions (✓ October 13, 2025)
