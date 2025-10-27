@@ -78,6 +78,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // ============ Course Routes ============
+  // Get all courses for admin (no filtering, includes drafts from all teachers)
+  app.get('/api/admin/courses', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (!user?.roles?.includes('admin')) {
+        return res.status(403).json({ message: "Only admins can access this endpoint" });
+      }
+
+      // Get ALL courses without filters (includes drafts from all teachers)
+      const courses = await storage.getCourses();
+      res.json(courses);
+    } catch (error) {
+      console.error("Error fetching admin courses:", error);
+      res.status(500).json({ message: "Failed to fetch courses" });
+    }
+  });
+
   app.get('/api/courses', async (req, res) => {
     try {
       const { ageGroup, difficulty, status } = req.query;

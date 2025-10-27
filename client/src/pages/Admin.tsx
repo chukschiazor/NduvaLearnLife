@@ -43,9 +43,9 @@ export default function Admin() {
     sequenceOrder: 1,
   });
 
-  // Fetch courses
+  // Fetch courses (using admin endpoint to see ALL courses from ALL teachers)
   const { data: courses = [], isLoading: coursesLoading } = useQuery<Course[]>({
-    queryKey: ['/api/courses'],
+    queryKey: ['/api/admin/courses'],
   });
 
   // Fetch modules for selected course
@@ -67,8 +67,9 @@ export default function Admin() {
       return res.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
       await queryClient.invalidateQueries({ queryKey: ['/api/teacher/courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
       toast({ title: "Course created successfully!" });
       setShowCourseForm(false);
       setCourseForm({
