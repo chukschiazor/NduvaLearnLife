@@ -66,9 +66,9 @@ export default function Admin() {
       const res = await apiRequest("POST", "/api/courses", data);
       return res.json();
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
-      queryClient.invalidateQueries({ queryKey: ['/api/teacher/courses'] });
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/teacher/courses'] });
       toast({ title: "Course created successfully!" });
       setShowCourseForm(false);
       setCourseForm({
