@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -14,6 +15,7 @@ import type { Course, Module, CourseSession } from "@shared/schema";
 
 export default function Admin() {
   const { toast } = useToast();
+  const [, setLocation] = useLocation();
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
   const [selectedModule, setSelectedModule] = useState<Module | null>(null);
   const [showCourseForm, setShowCourseForm] = useState(false);
@@ -66,8 +68,9 @@ export default function Admin() {
       const res = await apiRequest("POST", "/api/courses", data);
       return res.json();
     },
-    onSuccess: () => {
+    onSuccess: (newCourse) => {
       queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      queryClient.invalidateQueries({ queryKey: ['/api/teacher/courses'] });
       toast({ title: "Course created successfully!" });
       setShowCourseForm(false);
       setCourseForm({
@@ -77,6 +80,7 @@ export default function Admin() {
         difficulty: "beginner",
         estimatedDurationMinutes: 60,
       });
+      setLocation(`/course-builder/${newCourse.id}`);
     },
   });
 
