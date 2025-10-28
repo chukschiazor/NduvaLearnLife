@@ -30,6 +30,76 @@ export default function Courses() {
     { title: "Overall Progress", value: "65%", icon: TrendingUp, description: "On track", colorClass: "text-chart-3" },
   ];
 
+  // Helper function to estimate duration based on lessons
+  const estimateDuration = (totalLessons: number): string => {
+    // Assuming ~15 minutes per lesson
+    const totalMinutes = totalLessons * 15;
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    
+    if (hours === 0) {
+      return `${minutes} min`;
+    } else if (minutes === 0) {
+      return `${hours} hour${hours > 1 ? 's' : ''}`;
+    } else {
+      return `${hours}.5 hours`;
+    }
+  };
+
+  // Keep the original mock courses for display
+  const mockCourses = [
+    {
+      id: "mock-1",
+      title: "Smart Budgeting Basics",
+      description: "Learn how to create and manage your personal budget effectively with practical tips and real-world examples.",
+      thumbnail: budgetingImg,
+      totalLessons: 12,
+      duration: "2.5 hours",
+      ageGroup: "10-13" as const,
+    },
+    {
+      id: "mock-2",
+      title: "Creative Problem Solving",
+      description: "Develop critical thinking skills and learn innovative approaches to tackle everyday challenges.",
+      thumbnail: problemSolvingImg,
+      totalLessons: 15,
+      duration: "3 hours",
+      ageGroup: "14-17" as const,
+    },
+    {
+      id: "mock-3",
+      title: "Unlocking Creativity",
+      description: "Explore your creative potential through hands-on projects and interactive exercises.",
+      thumbnail: creativityImg,
+      totalLessons: 10,
+      duration: "2 hours",
+      ageGroup: "10-13" as const,
+    },
+    {
+      id: "mock-4",
+      title: "Investment Fundamentals",
+      description: "Understand the basics of investing, compound interest, and building long-term wealth.",
+      thumbnail: investingImg,
+      totalLessons: 18,
+      duration: "4 hours",
+      ageGroup: "18-21" as const,
+    },
+  ];
+
+  // Combine mock courses with published courses from database
+  const allCourses = [
+    ...mockCourses,
+    ...(publishedCourses || []).map(course => ({
+      id: course.id,
+      title: course.title,
+      description: course.description,
+      thumbnail: course.thumbnailUrl || budgetingImg,
+      totalLessons: course.totalLessons,
+      duration: estimateDuration(course.totalLessons),
+      ageGroup: course.ageGroup,
+    }))
+  ];
+
   const isNewUser = !enrollmentsLoading && Array.isArray(enrollments) && enrollments.length === 0;
   const isLoading = enrollmentsLoading || coursesLoading;
 
@@ -66,25 +136,20 @@ export default function Courses() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {publishedCourses && publishedCourses.length > 0 ? (
-              publishedCourses.map((course) => (
-                <CourseCard 
-                  key={course.id} 
-                  id={course.id}
-                  title={course.title}
-                  description={course.description}
-                  thumbnail={course.thumbnailUrl || budgetingImg}
-                  totalLessons={course.totalLessons}
-                  ageGroup={course.ageGroup}
-                  isExploreMode={true} 
-                  data-testid={`course-card-${course.id}`}
-                />
-              ))
-            ) : (
-              <div className="col-span-full text-center py-12">
-                <p className="text-muted-foreground">No published courses available yet.</p>
-              </div>
-            )}
+            {allCourses.map((course) => (
+              <CourseCard 
+                key={course.id} 
+                id={course.id}
+                title={course.title}
+                description={course.description}
+                thumbnail={course.thumbnail}
+                totalLessons={course.totalLessons}
+                duration={course.duration}
+                ageGroup={course.ageGroup}
+                isExploreMode={true} 
+                data-testid={`course-card-${course.id}`}
+              />
+            ))}
           </div>
         </div>
 
