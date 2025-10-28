@@ -248,7 +248,7 @@ export const quizAttempts = pgTable("quiz_attempts", {
   submittedAt: timestamp("submitted_at").notNull(),
 });
 
-// Lesson Views
+// Lesson Views (legacy)
 export const lessonViews = pgTable("lesson_views", {
   id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
   userId: varchar("user_id").notNull().references(() => users.id),
@@ -257,6 +257,20 @@ export const lessonViews = pgTable("lesson_views", {
   videoDurationSeconds: integer("video_duration_seconds").notNull(),
   completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).notNull(),
   viewedAt: timestamp("viewed_at").notNull().defaultNow(),
+});
+
+// Session Views (for courseSessions progress tracking)
+export const sessionViews = pgTable("session_views", {
+  id: varchar("id").primaryKey().default(sql`gen_random_uuid()`),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  sessionId: varchar("session_id").notNull().references(() => courseSessions.id),
+  enrollmentId: varchar("enrollment_id").notNull().references(() => enrollments.id),
+  watchDurationSeconds: integer("watch_duration_seconds").notNull().default(0),
+  videoDurationSeconds: integer("video_duration_seconds"),
+  completionPercentage: decimal("completion_percentage", { precision: 5, scale: 2 }).notNull().default('0'),
+  isCompleted: boolean("is_completed").notNull().default(false),
+  lastWatchedAt: timestamp("last_watched_at").notNull().defaultNow(),
+  completedAt: timestamp("completed_at"),
 });
 
 // Badges
@@ -450,6 +464,8 @@ export type EnrollmentWithCourse = Enrollment & { course: Course | null };
 export type QuizAttempt = typeof quizAttempts.$inferSelect;
 export type InsertQuizAttempt = z.infer<typeof insertQuizAttemptSchema>;
 export type LessonView = typeof lessonViews.$inferSelect;
+export type SessionView = typeof sessionViews.$inferSelect;
+export type InsertSessionView = typeof sessionViews.$inferInsert;
 export type Badge = typeof badges.$inferSelect;
 export type BadgeEarned = typeof badgesEarned.$inferSelect;
 export type Certificate = typeof certificates.$inferSelect;

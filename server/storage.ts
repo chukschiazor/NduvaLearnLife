@@ -11,6 +11,7 @@ import {
   enrollments,
   quizAttempts,
   lessonViews,
+  sessionViews,
   badges,
   badgesEarned,
   certificates,
@@ -34,6 +35,8 @@ import {
   type InsertProject,
   type Enrollment,
   type InsertEnrollment,
+  type SessionView,
+  type InsertSessionView,
   type Post,
   type InsertPost,
   type Comment,
@@ -99,6 +102,11 @@ export interface IStorage {
   getUserEnrollments(userId: string): Promise<Enrollment[]>;
   getEnrolledCoursesWithProgress(userId: string): Promise<Array<{ course: Course; enrollment: Enrollment }>>;
   updateEnrollmentProgress(enrollmentId: string, progress: number, completedLessons: number): Promise<Enrollment>;
+  
+  // Session Progress Tracking
+  upsertSessionView(userId: string, sessionId: string, enrollmentId: string, watchDurationSeconds: number, videoDurationSeconds: number): Promise<SessionView>;
+  getSessionView(userId: string, sessionId: string): Promise<SessionView | undefined>;
+  getUserSessionViews(userId: string, enrollmentId: string): Promise<SessionView[]>;
   
   // Gamification
   updateUserXP(userId: string, xpToAdd: number): Promise<User>;
@@ -511,6 +519,100 @@ export class DatabaseStorage implements IStorage {
       .where(eq(enrollments.id, enrollmentId))
       .returning();
     return enrollment;
+  }
+
+  // Session Progress Tracking
+  async upsertSessionView(userId: string, sessionId: string, enrollmentId: string, watchDurationSeconds: number, videoDurationSeconds: number): Promise<SessionView> {
+    // Check if session view already exists
+    const existing = await db
+      .select()
+      .from(sessionViews)
+      .where(and(
+        eq(sessionViews.userId, userId),
+        eq(sessionViews.sessionId, sessionId)
+      ))
+      .limit(1);
+    
+    // Keep maximum watch duration (never regress)
+    const maxWatchDuration = existing.length > 0 
+      ? Math.max(existing[0].watchDurationSeconds, watchDurationSeconds)
+      : watchDurationSeconds;
+    
+    // Cap at video duration
+    const cappedWatchDuration = videoDurationSeconds > 0
+      ? Math.min(maxWatchDuration, videoDurationSeconds)
+      : maxWatchDuration;
+    
+    // Calculate completion percentage
+    const completionPercentage = videoDurationSeconds > 0 
+      ? (cappedWatchDuration / videoDurationSeconds) * 100 
+      : 0;
+    
+    // Once completed, stay completed (don't flip back to false)
+    const isCompleted = existing.length > 0 && existing[0].isCompleted
+      ? true
+      : completionPercentage >= 80;
+    
+    if (existing.length > 0) {
+      // Update existing view
+      const [updated] = await db
+        .update(sessionViews)
+        .set({
+          watchDurationSeconds: cappedWatchDuration,
+          videoDurationSeconds,
+          completionPercentage: completionPercentage.toFixed(2),
+          isCompleted,
+          lastWatchedAt: new Date(),
+          // Set completedAt only when first reaching completion
+          completedAt: isCompleted && !existing[0].isCompleted ? new Date() : existing[0].completedAt,
+        })
+        .where(and(
+          eq(sessionViews.userId, userId),
+          eq(sessionViews.sessionId, sessionId)
+        ))
+        .returning();
+      return updated;
+    } else {
+      // Create new view
+      const [created] = await db
+        .insert(sessionViews)
+        .values({
+          userId,
+          sessionId,
+          enrollmentId,
+          watchDurationSeconds: cappedWatchDuration,
+          videoDurationSeconds,
+          completionPercentage: completionPercentage.toFixed(2),
+          isCompleted,
+          lastWatchedAt: new Date(),
+          completedAt: isCompleted ? new Date() : null,
+        })
+        .returning();
+      return created;
+    }
+  }
+
+  async getSessionView(userId: string, sessionId: string): Promise<SessionView | undefined> {
+    const [view] = await db
+      .select()
+      .from(sessionViews)
+      .where(and(
+        eq(sessionViews.userId, userId),
+        eq(sessionViews.sessionId, sessionId)
+      ))
+      .limit(1);
+    return view;
+  }
+
+  async getUserSessionViews(userId: string, enrollmentId: string): Promise<SessionView[]> {
+    return await db
+      .select()
+      .from(sessionViews)
+      .where(and(
+        eq(sessionViews.userId, userId),
+        eq(sessionViews.enrollmentId, enrollmentId)
+      ))
+      .orderBy(desc(sessionViews.lastWatchedAt));
   }
 
   // Gamification

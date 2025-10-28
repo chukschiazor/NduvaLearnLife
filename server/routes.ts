@@ -525,6 +525,61 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // ============ Session Progress Tracking Routes ============
+  app.post('/api/sessions/:sessionId/progress', async (req: any, res) => {
+    try {
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
+      const { sessionId } = req.params;
+      const { enrollmentId, watchDurationSeconds, videoDurationSeconds } = req.body;
+
+      if (!enrollmentId || watchDurationSeconds === undefined || !videoDurationSeconds) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+
+      const sessionView = await storage.upsertSessionView(
+        user.id,
+        sessionId,
+        enrollmentId,
+        watchDurationSeconds,
+        videoDurationSeconds
+      );
+
+      res.json(sessionView);
+    } catch (error) {
+      console.error("Error saving session progress:", error);
+      res.status(500).json({ message: "Failed to save session progress" });
+    }
+  });
+
+  app.get('/api/sessions/:sessionId/progress', async (req: any, res) => {
+    try {
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
+      const { sessionId } = req.params;
+
+      const sessionView = await storage.getSessionView(user.id, sessionId);
+      res.json(sessionView || null);
+    } catch (error) {
+      console.error("Error fetching session progress:", error);
+      res.status(500).json({ message: "Failed to fetch session progress" });
+    }
+  });
+
+  app.get('/api/enrollments/:enrollmentId/session-views', async (req: any, res) => {
+    try {
+      // TEMPORARY: Use mock user for development
+      const user = await (storage as any).getMockUser();
+      const { enrollmentId } = req.params;
+
+      const sessionViews = await storage.getUserSessionViews(user.id, enrollmentId);
+      res.json(sessionViews);
+    } catch (error) {
+      console.error("Error fetching session views:", error);
+      res.status(500).json({ message: "Failed to fetch session views" });
+    }
+  });
+
   // ============ Gamification Routes ============
   app.get('/api/leaderboard', async (req, res) => {
     try {
