@@ -8,10 +8,10 @@ interface CourseCardProps {
   title: string;
   description: string;
   thumbnail: string;
-  progress: number;
+  progress?: number;
   totalLessons: number;
-  completedLessons: number;
-  duration: string;
+  completedLessons?: number;
+  duration?: string;
   ageGroup: string;
   isExploreMode?: boolean;
 }
@@ -20,10 +20,10 @@ export default function CourseCard({
   title,
   description,
   thumbnail,
-  progress,
+  progress = 0,
   totalLessons,
-  completedLessons,
-  duration,
+  completedLessons = 0,
+  duration = "N/A",
   ageGroup,
   isExploreMode = false,
 }: CourseCardProps) {

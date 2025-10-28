@@ -10,12 +10,17 @@ import investingImg from "@assets/generated_images/Investing_module_thumbnail_eb
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import type { EnrollmentWithCourse } from "@shared/schema";
+import type { EnrollmentWithCourse, Course } from "@shared/schema";
 
 export default function Courses() {
   // Fetch user's enrollments to determine if they're a new user
-  const { data: enrollments, isLoading } = useQuery<EnrollmentWithCourse[]>({
+  const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<EnrollmentWithCourse[]>({
     queryKey: ['/api/enrollments/me'],
+  });
+
+  // Fetch published courses from the API
+  const { data: publishedCourses, isLoading: coursesLoading } = useQuery<Course[]>({
+    queryKey: ['/api/courses'],
   });
   
   const stats = [
@@ -25,54 +30,8 @@ export default function Courses() {
     { title: "Overall Progress", value: "65%", icon: TrendingUp, description: "On track", colorClass: "text-chart-3" },
   ];
 
-  const courses = [
-    {
-      id: "1",
-      title: "Smart Budgeting Basics",
-      description: "Learn how to create and manage your personal budget effectively with practical tips and real-world examples.",
-      thumbnail: budgetingImg,
-      progress: 65,
-      totalLessons: 12,
-      completedLessons: 8,
-      duration: "2.5 hours",
-      ageGroup: "10-15",
-    },
-    {
-      id: "2",
-      title: "Creative Problem Solving",
-      description: "Develop critical thinking skills and learn innovative approaches to tackle everyday challenges.",
-      thumbnail: problemSolvingImg,
-      progress: 40,
-      totalLessons: 15,
-      completedLessons: 6,
-      duration: "3 hours",
-      ageGroup: "16-19",
-    },
-    {
-      id: "3",
-      title: "Unlocking Creativity",
-      description: "Explore your creative potential through hands-on projects and interactive exercises.",
-      thumbnail: creativityImg,
-      progress: 100,
-      totalLessons: 10,
-      completedLessons: 10,
-      duration: "2 hours",
-      ageGroup: "10-15",
-    },
-    {
-      id: "4",
-      title: "Investment Fundamentals",
-      description: "Understand the basics of investing, compound interest, and building long-term wealth.",
-      thumbnail: investingImg,
-      progress: 20,
-      totalLessons: 18,
-      completedLessons: 4,
-      duration: "4 hours",
-      ageGroup: "20-23",
-    },
-  ];
-
-  const isNewUser = !isLoading && Array.isArray(enrollments) && enrollments.length === 0;
+  const isNewUser = !enrollmentsLoading && Array.isArray(enrollments) && enrollments.length === 0;
+  const isLoading = enrollmentsLoading || coursesLoading;
 
   // Loading state
   if (isLoading) {
@@ -107,9 +66,25 @@ export default function Courses() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {courses.map((course) => (
-              <CourseCard key={course.id} {...course} isExploreMode={true} />
-            ))}
+            {publishedCourses && publishedCourses.length > 0 ? (
+              publishedCourses.map((course) => (
+                <CourseCard 
+                  key={course.id} 
+                  id={course.id}
+                  title={course.title}
+                  description={course.description}
+                  thumbnail={course.thumbnailUrl || budgetingImg}
+                  totalLessons={course.totalLessons}
+                  ageGroup={course.ageGroup}
+                  isExploreMode={true} 
+                  data-testid={`course-card-${course.id}`}
+                />
+              ))
+            ) : (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No published courses available yet.</p>
+              </div>
+            )}
           </div>
         </div>
 
@@ -141,9 +116,28 @@ export default function Courses() {
         </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
-          {courses.map((course) => (
-            <CourseCard key={course.id} {...course} />
-          ))}
+          {enrollments && enrollments.length > 0 ? (
+            enrollments.filter(enrollment => enrollment.course).map((enrollment) => (
+              <CourseCard 
+                key={enrollment.id} 
+                id={enrollment.course!.id}
+                title={enrollment.course!.title}
+                description={enrollment.course!.description}
+                thumbnail={enrollment.course!.thumbnailUrl || budgetingImg}
+                progress={enrollment.progressPercentage}
+                totalLessons={enrollment.course!.totalLessons}
+                ageGroup={enrollment.course!.ageGroup}
+                data-testid={`enrolled-course-card-${enrollment.courseId}`}
+              />
+            ))
+          ) : (
+            <div className="col-span-full text-center py-12">
+              <p className="text-muted-foreground">You haven't enrolled in any courses yet.</p>
+              <Button className="mt-4" onClick={() => window.location.reload()}>
+                Browse Courses
+              </Button>
+            </div>
+          )}
         </div>
       </div>
 
