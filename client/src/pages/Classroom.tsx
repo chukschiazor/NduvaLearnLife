@@ -7,6 +7,7 @@ import { Progress } from "@/components/ui/progress";
 import { ChevronRight, ChevronDown, PlayCircle, CheckCircle2, Lock } from "lucide-react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import VideoPlayer from "@/components/VideoPlayer";
 import { useToast } from "@/hooks/use-toast";
 import { queryClient } from "@/lib/queryClient";
 import type { Course, Module, CourseSession } from "@shared/schema";
@@ -188,48 +189,48 @@ export default function Classroom() {
           {/* Video Player Area */}
           <div className="lg:col-span-2">
             {selectedSession ? (
-              <Card>
-                <CardContent className="p-0">
-                  {/* Video Player */}
-                  <div className="aspect-video bg-black rounded-t-lg relative" data-testid="video-player">
-                    {selectedSession.videoUrl ? (
-                      <iframe
-                        src={selectedSession.videoUrl}
-                        className="w-full h-full rounded-t-lg"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    ) : (
-                      <div className="flex items-center justify-center h-full text-white">
-                        <p>No video available</p>
-                      </div>
-                    )}
-                  </div>
+              <div className="space-y-4">
+                <VideoPlayer
+                  title={selectedSession.title}
+                  videoUrl={selectedSession.videoUrl || undefined}
+                  progress={0} // TODO: Track actual progress in Task 4
+                  isCompleted={false} // TODO: Track completion in Task 4
+                  onMarkComplete={() => {
+                    toast({
+                      title: "Lesson completed!",
+                      description: "Great job! Keep learning.",
+                    });
+                  }}
+                  onTimeUpdate={(currentTime, duration, percentWatched) => {
+                    // TODO: Save progress to database in Task 4
+                    console.log('Video progress:', { currentTime, duration, percentWatched });
+                  }}
+                />
 
-                  {/* Session Info */}
-                  <div className="p-6 space-y-4">
-                    <div>
-                      <h2 className="text-2xl font-bold mb-2" data-testid="text-session-title">
-                        {selectedSession.title}
-                      </h2>
-                      {selectedSession.description && (
-                        <p className="text-muted-foreground">{selectedSession.description}</p>
-                      )}
-                    </div>
+                {/* Session Description */}
+                {selectedSession.description && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle className="text-lg">About this session</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-muted-foreground">{selectedSession.description}</p>
+                    </CardContent>
+                  </Card>
+                )}
 
-                    <div className="flex items-center gap-4">
-                      <Button data-testid="button-mark-complete">
-                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                        Mark as Complete
-                      </Button>
-                      <Button variant="outline" data-testid="button-next-session">
-                        Next Session
-                        <ChevronRight className="h-4 w-4 ml-2" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                {/* Navigation Buttons */}
+                <div className="flex items-center justify-between pt-2">
+                  <Button variant="outline" className="gap-2" data-testid="button-previous-session">
+                    <ChevronRight className="h-4 w-4 rotate-180" />
+                    Previous Session
+                  </Button>
+                  <Button className="gap-2" data-testid="button-next-session">
+                    Next Session
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
             ) : (
               <Card>
                 <CardContent className="p-12 text-center">
