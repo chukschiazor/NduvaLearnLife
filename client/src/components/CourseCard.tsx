@@ -14,9 +14,14 @@ interface CourseCardProps {
   duration?: string;
   ageGroup: string;
   isExploreMode?: boolean;
+  isEnrolled?: boolean;
+  onEnroll?: (courseId: string) => void;
+  onContinue?: (courseId: string) => void;
+  isEnrolling?: boolean;
 }
 
 export default function CourseCard({
+  id,
   title,
   description,
   thumbnail,
@@ -26,8 +31,26 @@ export default function CourseCard({
   duration = "N/A",
   ageGroup,
   isExploreMode = false,
+  isEnrolled = false,
+  onEnroll,
+  onContinue,
+  isEnrolling = false,
 }: CourseCardProps) {
   const isCompleted = progress === 100;
+
+  const handleButtonClick = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (isExploreMode) {
+      if (isEnrolled && onContinue) {
+        onContinue(id);
+      } else if (!isEnrolled && onEnroll) {
+        onEnroll(id);
+      }
+    } else if (onContinue) {
+      onContinue(id);
+    }
+  };
 
   return (
     <Card className="group hover-elevate overflow-hidden">
@@ -83,9 +106,21 @@ export default function CourseCard({
       </CardContent>
 
       <CardFooter>
-        <Button className="w-full gap-2" data-testid="button-continue-course">
+        <Button 
+          className="w-full gap-2" 
+          data-testid="button-continue-course"
+          onClick={handleButtonClick}
+          disabled={isEnrolling}
+        >
           <Play className="h-4 w-4" />
-          {isExploreMode ? "Start Course" : isCompleted ? "Review Course" : "Continue Learning"}
+          {isEnrolling 
+            ? "Enrolling..." 
+            : isExploreMode 
+              ? (isEnrolled ? "Continue Learning" : "Enroll Now")
+              : isCompleted 
+                ? "Review Course" 
+                : "Continue Learning"
+          }
         </Button>
       </CardFooter>
     </Card>

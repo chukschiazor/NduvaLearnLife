@@ -1,3 +1,4 @@
+import React from "react";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 import CourseCard from "@/components/CourseCard";
@@ -7,12 +8,18 @@ import budgetingImg from "@assets/generated_images/Budgeting_module_thumbnail_a9
 import creativityImg from "@assets/generated_images/Creativity_module_thumbnail_fe82ef99.png";
 import problemSolvingImg from "@assets/generated_images/Problem-solving_module_thumbnail_08a22595.png";
 import investingImg from "@assets/generated_images/Investing_module_thumbnail_ebfef553.png";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/hooks/use-toast";
+import { queryClient, apiRequest } from "@/lib/queryClient";
 import type { EnrollmentWithCourse, Course } from "@shared/schema";
 
 export default function Courses() {
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  
   // Fetch user's enrollments to determine if they're a new user
   const { data: enrollments, isLoading: enrollmentsLoading } = useQuery<EnrollmentWithCourse[]>({
     queryKey: ['/api/enrollments/me'],
@@ -21,6 +28,41 @@ export default function Courses() {
   // Fetch published courses from the API
   const { data: publishedCourses, isLoading: coursesLoading } = useQuery<Course[]>({
     queryKey: ['/api/courses'],
+  });
+
+  // Get enrolled course IDs for checking enrollment status
+  const enrolledCourseIds = new Set(
+    enrollments?.map(e => e.course?.id).filter(Boolean) || []
+  );
+
+  // Track which course is currently enrolling (per-course loading state)
+  const [enrollingCourseId, setEnrollingCourseId] = React.useState<string | null>(null);
+
+  // Enrollment mutation
+  const enrollMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      setEnrollingCourseId(courseId);
+      const res = await apiRequest("POST", "/api/enrollments", { courseId });
+      return await res.json();
+    },
+    onSuccess: (_, courseId) => {
+      queryClient.invalidateQueries({ queryKey: ['/api/enrollments/me'] });
+      toast({
+        title: "Successfully enrolled!",
+        description: "You can now start learning.",
+      });
+      setEnrollingCourseId(null);
+      // Navigate to the classroom page
+      navigate(`/classroom/${courseId}`);
+    },
+    onError: (error: any) => {
+      toast({
+        title: "Enrollment failed",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+      setEnrollingCourseId(null);
+    },
   });
   
   const stats = [
@@ -46,59 +88,16 @@ export default function Courses() {
     }
   };
 
-  // Keep the original mock courses for display
-  const mockCourses = [
-    {
-      id: "mock-1",
-      title: "Smart Budgeting Basics",
-      description: "Learn how to create and manage your personal budget effectively with practical tips and real-world examples.",
-      thumbnail: budgetingImg,
-      totalLessons: 12,
-      duration: "2.5 hours",
-      ageGroup: "10-13" as const,
-    },
-    {
-      id: "mock-2",
-      title: "Creative Problem Solving",
-      description: "Develop critical thinking skills and learn innovative approaches to tackle everyday challenges.",
-      thumbnail: problemSolvingImg,
-      totalLessons: 15,
-      duration: "3 hours",
-      ageGroup: "14-17" as const,
-    },
-    {
-      id: "mock-3",
-      title: "Unlocking Creativity",
-      description: "Explore your creative potential through hands-on projects and interactive exercises.",
-      thumbnail: creativityImg,
-      totalLessons: 10,
-      duration: "2 hours",
-      ageGroup: "10-13" as const,
-    },
-    {
-      id: "mock-4",
-      title: "Investment Fundamentals",
-      description: "Understand the basics of investing, compound interest, and building long-term wealth.",
-      thumbnail: investingImg,
-      totalLessons: 18,
-      duration: "4 hours",
-      ageGroup: "18-21" as const,
-    },
-  ];
-
-  // Combine mock courses with published courses from database
-  const allCourses = [
-    ...mockCourses,
-    ...(publishedCourses || []).map(course => ({
-      id: course.id,
-      title: course.title,
-      description: course.description,
-      thumbnail: course.thumbnailUrl || budgetingImg,
-      totalLessons: course.totalLessons,
-      duration: estimateDuration(course.totalLessons),
-      ageGroup: course.ageGroup,
-    }))
-  ];
+  // Only show real published courses from database (no mock courses)
+  const allCourses = (publishedCourses || []).map(course => ({
+    id: course.id,
+    title: course.title,
+    description: course.description,
+    thumbnail: course.thumbnailUrl || budgetingImg,
+    totalLessons: course.totalLessons,
+    duration: estimateDuration(course.totalLessons),
+    ageGroup: course.ageGroup,
+  }));
 
   const isNewUser = !enrollmentsLoading && Array.isArray(enrollments) && enrollments.length === 0;
   const isLoading = enrollmentsLoading || coursesLoading;
@@ -136,20 +135,30 @@ export default function Courses() {
           </div>
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {allCourses.map((course) => (
-              <CourseCard 
-                key={course.id} 
-                id={course.id}
-                title={course.title}
-                description={course.description}
-                thumbnail={course.thumbnail}
-                totalLessons={course.totalLessons}
-                duration={course.duration}
-                ageGroup={course.ageGroup}
-                isExploreMode={true} 
-                data-testid={`course-card-${course.id}`}
-              />
-            ))}
+            {allCourses.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-muted-foreground">No published courses available yet.</p>
+              </div>
+            ) : (
+              allCourses.map((course) => (
+                <CourseCard 
+                  key={course.id} 
+                  id={course.id}
+                  title={course.title}
+                  description={course.description}
+                  thumbnail={course.thumbnail}
+                  totalLessons={course.totalLessons}
+                  duration={course.duration}
+                  ageGroup={course.ageGroup}
+                  isExploreMode={true}
+                  isEnrolled={enrolledCourseIds.has(course.id)}
+                  onEnroll={(courseId) => enrollMutation.mutate(courseId)}
+                  onContinue={(courseId) => navigate(`/classroom/${courseId}`)}
+                  isEnrolling={enrollingCourseId === course.id}
+                  data-testid={`course-card-${course.id}`}
+                />
+              ))
+            )}
           </div>
         </div>
 
