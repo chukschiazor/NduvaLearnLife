@@ -25,12 +25,15 @@ Preferred communication style: Simple, everyday language.
 **Architecture Pattern:** Monolithic application with separate client/server directories, a storage abstraction layer, and RESTful API routes.
 
 **Key Features:**
-- **Database:** Comprehensive schema with 17+ tables.
+- **Database:** Comprehensive schema with 18+ tables including sessionViews for video progress tracking.
 - **Authentication:** Replit OAuth integrated with session management (currently using a development-only auto-login as a mock admin user, disabled in production). Multi-role system (`learner`, `teacher`, `admin`) with dynamic UI adaptation.
 - **Onboarding:** Multi-step learner onboarding for AI personalization (interests, skill level, learning style, goals) stored in user preferences.
 - **Role-Based Access:** Distinct learner and teacher pathways with client-side route protection and dynamic navigation.
 - **Course Management:** Full CourseBuilder interface for teachers/admins to create and manage courses, modules, sessions, quizzes (multi-question types), and projects. Includes comprehensive course deletion and publish/unpublish workflows with proper authorization and data cascade.
 - **Course Analytics:** Teacher/admin dashboards providing metrics like enrollments, active students, and completion rates.
+- **Enrollment System:** Complete enrollment workflow (Explore → Enroll → Classroom → My Learning) with real database data, per-course loading states, and proper error handling.
+- **Video Player:** Production-ready HTML5 video player with custom controls (play/pause/seek/volume/fullscreen/speed), YouTube/Vimeo iframe support, fullscreen synchronization, and onTimeUpdate callback for progress tracking.
+- **Video Progress Tracking (Backend):** Complete API for tracking session watch progress with sticky completion (80%+ threshold), maximum watch duration preservation, and progress non-regression. Endpoints: POST/GET /api/sessions/:sessionId/progress, GET /api/enrollments/:enrollmentId/session-views.
 
 ### Data Architecture
 
