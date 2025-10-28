@@ -6,7 +6,10 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Video, BookOpen, Trash2, Edit } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { Plus, Video, BookOpen, Trash2, Edit, Eye, EyeOff } from "lucide-react";
+import { Link } from "wouter";
 import Navbar from "@/components/Navbar";
 import { useToast } from "@/hooks/use-toast";
 import { apiRequest, queryClient } from "@/lib/queryClient";
@@ -19,6 +22,8 @@ export default function Admin() {
   const [showCourseForm, setShowCourseForm] = useState(false);
   const [showModuleForm, setShowModuleForm] = useState(false);
   const [showSessionForm, setShowSessionForm] = useState(false);
+  const [courseToDelete, setCourseToDelete] = useState<Course | null>(null);
+  const [courseToUnpublish, setCourseToUnpublish] = useState<Course | null>(null);
 
   // Form states
   const [courseForm, setCourseForm] = useState({
@@ -107,6 +112,56 @@ export default function Admin() {
       toast({ title: "Session created successfully!" });
       setShowSessionForm(false);
       setSessionForm({ title: "", description: "", videoUrl: "", durationSeconds: 0, sequenceOrder: sessions.length + 1 });
+    },
+  });
+
+  // Delete course mutation
+  const deleteCourseMutation = useMutation({
+    mutationFn: async (courseId: string) => {
+      const res = await apiRequest("DELETE", `/api/courses/${courseId}`);
+      return res.json();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/teacher/courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      toast({ title: "Course deleted successfully!" });
+      setCourseToDelete(null);
+      if (selectedCourse?.id === courseToDelete?.id) {
+        setSelectedCourse(null);
+        setSelectedModule(null);
+      }
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to delete course", 
+        description: error.message || "An error occurred",
+        variant: "destructive" 
+      });
+      setCourseToDelete(null);
+    },
+  });
+
+  // Toggle course status mutation
+  const toggleCourseStatusMutation = useMutation({
+    mutationFn: async ({ courseId, status }: { courseId: string; status: 'draft' | 'published' }) => {
+      const res = await apiRequest("PATCH", `/api/courses/${courseId}/status`, { status });
+      return res.json();
+    },
+    onSuccess: async (data) => {
+      await queryClient.invalidateQueries({ queryKey: ['/api/admin/courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/teacher/courses'] });
+      await queryClient.invalidateQueries({ queryKey: ['/api/courses'] });
+      toast({ title: `Course ${data.status === 'published' ? 'published' : 'unpublished'} successfully!` });
+      setCourseToUnpublish(null);
+    },
+    onError: (error: any) => {
+      toast({ 
+        title: "Failed to update course status", 
+        description: error.message || "An error occurred",
+        variant: "destructive" 
+      });
+      setCourseToUnpublish(null);
     },
   });
 
@@ -206,7 +261,7 @@ export default function Admin() {
                 courses.map((course) => (
                   <Card
                     key={course.id}
-                    className={`p-3 cursor-pointer hover-elevate ${
+                    className={`cursor-pointer hover-elevate ${
                       selectedCourse?.id === course.id ? "border-primary" : ""
                     }`}
                     onClick={() => {
@@ -215,8 +270,53 @@ export default function Admin() {
                     }}
                     data-testid={`card-course-${course.id}`}
                   >
-                    <h3 className="font-semibold">{course.title}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
+                    <div className="p-3">
+                      <div className="flex items-start justify-between mb-2">
+                        <h3 className="font-semibold flex-1">{course.title}</h3>
+                        <Badge variant={course.status === 'published' ? 'default' : 'secondary'}>
+                          {course.status === 'published' ? 'Published' : 'Draft'}
+                        </Badge>
+                      </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">{course.description}</p>
+                    </div>
+                    <div className="flex gap-1 p-2 border-t">
+                      <Link href={`/course-builder/${course.id}`} className="flex-1" onClick={(e) => e.stopPropagation()}>
+                        <Button variant="outline" size="sm" className="w-full gap-1" data-testid={`button-edit-course-${course.id}`}>
+                          <Edit className="h-3 w-3" />
+                          Edit
+                        </Button>
+                      </Link>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="gap-1"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (course.status === 'published') {
+                            setCourseToUnpublish(course);
+                          } else {
+                            toggleCourseStatusMutation.mutate({ courseId: course.id, status: 'published' });
+                          }
+                        }}
+                        disabled={toggleCourseStatusMutation.isPending}
+                        data-testid={`button-toggle-status-${course.id}`}
+                      >
+                        {course.status === 'published' ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                        {course.status === 'published' ? 'Unpublish' : 'Publish'}
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setCourseToDelete(course);
+                        }}
+                        disabled={deleteCourseMutation.isPending}
+                        data-testid={`button-delete-course-${course.id}`}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </Card>
                 ))
               )}
@@ -395,6 +495,52 @@ export default function Admin() {
           </Card>
         </div>
       </div>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={!!courseToDelete} onOpenChange={() => setCourseToDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Course</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete "{courseToDelete?.title}"? This action cannot be undone.
+              All modules, sessions, quizzes, and projects associated with this course will be permanently deleted.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => courseToDelete && deleteCourseMutation.mutate(courseToDelete.id)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Unpublish Confirmation Dialog */}
+      <AlertDialog open={!!courseToUnpublish} onOpenChange={() => setCourseToUnpublish(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Unpublish Course</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to unpublish "{courseToUnpublish?.title}"? 
+              This will remove it from the Explore Courses page and make it unavailable to learners.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => courseToUnpublish && toggleCourseStatusMutation.mutate({ 
+                courseId: courseToUnpublish.id, 
+                status: 'draft' 
+              })}
+            >
+              Unpublish
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

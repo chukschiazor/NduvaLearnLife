@@ -191,6 +191,69 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Delete course (admin can delete any, teacher can delete their own)
+  app.delete('/api/courses/:id', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
+        return res.status(403).json({ message: "Only teachers/admins can delete courses" });
+      }
+
+      const course = await storage.getCourse(req.params.id);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Teachers can only delete their own courses, admins can delete any
+      if (user.currentRole === 'teacher' && course.createdByTeacherId !== user.id) {
+        return res.status(403).json({ message: "You can only delete your own courses" });
+      }
+
+      await storage.deleteCourse(req.params.id);
+      res.json({ message: "Course deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting course:", error);
+      res.status(500).json({ message: "Failed to delete course" });
+    }
+  });
+
+  // Update course status (publish/unpublish)
+  app.patch('/api/courses/:id/status', async (req: any, res) => {
+    try {
+      const user = await (storage as any).getMockUser();
+      
+      if (!user?.roles?.includes('teacher') && !user?.roles?.includes('admin')) {
+        return res.status(403).json({ message: "Only teachers/admins can publish courses" });
+      }
+
+      const { status } = req.body;
+      if (!status || !['draft', 'published'].includes(status)) {
+        return res.status(400).json({ message: "Invalid status. Must be 'draft' or 'published'" });
+      }
+
+      const course = await storage.getCourse(req.params.id);
+      if (!course) {
+        return res.status(404).json({ message: "Course not found" });
+      }
+
+      // Teachers can only update their own courses, admins can update any
+      if (user.currentRole === 'teacher' && course.createdByTeacherId !== user.id) {
+        return res.status(403).json({ message: "You can only update your own courses" });
+      }
+
+      const updatedCourse = await storage.updateCourse(req.params.id, { 
+        status: status as 'draft' | 'published',
+        publishedAt: status === 'published' ? new Date() : null
+      });
+      
+      res.json(updatedCourse);
+    } catch (error) {
+      console.error("Error updating course status:", error);
+      res.status(500).json({ message: "Failed to update course status" });
+    }
+  });
+
   // ============ Module Routes (Admin/Teacher) ============
   app.get('/api/courses/:courseId/modules', async (req, res) => {
     try {

@@ -61,6 +61,7 @@ export interface IStorage {
   getCourses(filters?: { ageGroup?: string; difficulty?: string; status?: string }): Promise<Course[]>;
   getCoursesByTeacher(teacherId: string): Promise<Course[]>;
   updateCourse(id: string, course: Partial<InsertCourse>): Promise<Course>;
+  deleteCourse(id: string): Promise<void>;
   
   // Module operations (Coursera-style)
   createModule(module: InsertModule): Promise<Module>;
@@ -331,6 +332,34 @@ export class DatabaseStorage implements IStorage {
       .where(eq(courses.id, id))
       .returning();
     return course;
+  }
+
+  async deleteCourse(id: string): Promise<void> {
+    // Cascading deletes: Delete related data first
+    // 1. Get all modules for this course
+    const courseModules = await this.getModulesByCourse(id);
+    
+    // 2. For each module, delete its sessions, quizzes, and projects
+    for (const module of courseModules) {
+      // Delete sessions for this module
+      await db.delete(courseSessions).where(eq(courseSessions.moduleId, module.id));
+      // Delete quizzes for this module
+      await db.delete(quizzes).where(eq(quizzes.moduleId, module.id));
+      // Delete projects for this module
+      await db.delete(projects).where(eq(projects.moduleId, module.id));
+    }
+    
+    // 3. Delete all modules for this course
+    await db.delete(modules).where(eq(modules.courseId, id));
+    
+    // 4. Delete enrollments for this course
+    await db.delete(enrollments).where(eq(enrollments.courseId, id));
+    
+    // 5. Delete legacy lessons if any
+    await db.delete(lessons).where(eq(lessons.courseId, id));
+    
+    // 6. Finally, delete the course itself
+    await db.delete(courses).where(eq(courses.id, id));
   }
 
   // Module operations (Coursera-style)
